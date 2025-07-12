@@ -1,0 +1,24 @@
+# Spring Boot Configuration
+spring:
+  application:
+    name: claude-automator
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.claude.automator: DEBUG
+    io.github.jspinak.brobot: INFO
+
+# Brobot Configuration (v1.1.0+)
+# Only override values that differ from defaults in brobot-defaults.properties
+brobot:
+  core:
+    image-path: images
+    mock: false
+  startup:
+    verify-initial-states: false
+    initial-states: ""  # Let ActiveStateVerifier handle this
+    startup-delay: 2
+  sikuli:
+    highlight: true
