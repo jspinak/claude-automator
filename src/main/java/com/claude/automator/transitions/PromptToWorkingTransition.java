@@ -11,9 +11,11 @@ import io.github.jspinak.brobot.action.basic.find.PatternFindOptions;
 import io.github.jspinak.brobot.action.basic.highlight.HighlightOptions;
 import io.github.jspinak.brobot.action.basic.type.TypeOptions;
 import io.github.jspinak.brobot.annotations.Transition;
+import io.github.jspinak.brobot.logging.unified.BrobotLogger;
 import io.github.jspinak.brobot.model.element.Region;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Transition from Prompt state to Working state.
@@ -26,6 +28,9 @@ public class PromptToWorkingTransition {
 
     private final PromptState promptState;
     private final Action action;
+    
+    @Autowired(required = false)
+    private BrobotLogger brobotLogger;
 
     /**
      * Executes the transition from Prompt to Working state.
@@ -33,18 +38,43 @@ public class PromptToWorkingTransition {
      * Finds prompt -> Clicks on it -> Types "continue" with Enter.
      */
     public boolean execute() {
-        try {
+        try (var operation = brobotLogger != null ? 
+                brobotLogger.operation("PromptToWorkingTransition") : null) {
+            
             log.info("Executing transition from Prompt to Working state");
             log.debug("Using image: {}", promptState.getClaudePrompt().getName());
+            
+            if (brobotLogger != null) {
+                brobotLogger.log()
+                    .observation("Starting Prompt to Working transition")
+                    .metadata("fromState", "PromptState")
+                    .metadata("toState", "WorkingState")
+                    .metadata("promptImage", promptState.getClaudePrompt().getName())
+                    .metadata("continueCommand", promptState.getContinueCommand().getString())
+                    .log();
+            }
 
             // Highlight the search area for debugging
-            HighlightOptions highlightOptions = new HighlightOptions.Builder()
-                    .setPauseAfterEnd(0.5) // Pause after highlighting
-                    .build();
-            ObjectCollection objColl = new ObjectCollection.Builder()
-                    .withRegions(new Region())
-                    .build();
-            action.perform(highlightOptions, objColl);
+            try (var timer = brobotLogger != null ? 
+                    brobotLogger.startTimer("HighlightSearchArea") : null) {
+                
+                HighlightOptions highlightOptions = new HighlightOptions.Builder()
+                        .setPauseAfterEnd(0.5) // Pause after highlighting
+                        .build();
+                ObjectCollection objColl = new ObjectCollection.Builder()
+                        .withRegions(new Region())
+                        .build();
+                        
+                if (brobotLogger != null) {
+                    brobotLogger.log()
+                        .observation("Highlighting search area")
+                        .metadata("pauseAfterEnd", 0.5)
+                        .metadata("regionType", "FullScreen")
+                        .log();
+                }
+                
+                action.perform(highlightOptions, objColl);
+            }
             
             // Using the fluent API to chain actions: find -> click -> type
             PatternFindOptions findClickType = new PatternFindOptions.Builder()
@@ -62,22 +92,85 @@ public class PromptToWorkingTransition {
                     .withStrings(promptState.getContinueCommand()) // For type (continue with Enter)
                     .build();
             
+            if (brobotLogger != null) {
+                brobotLogger.log()
+                    .observation("Executing chained action sequence")
+                    .metadata("actionChain", "FIND -> CLICK -> TYPE")
+                    .metadata("findPause", 0.5)
+                    .metadata("clickPause", 0.5)
+                    .metadata("targetImage", promptState.getClaudePrompt().getName())
+                    .metadata("typeText", promptState.getContinueCommand().getString().replace("\n", "\\n"))
+                    .log();
+            }
+            
             // Execute the chained action
             log.debug("Performing chained action: find -> click -> type");
-            ActionResult result = action.perform(findClickType, target);
-            log.debug("Action result: success={}, description={}", result.isSuccess(), result.getActionDescription());
             
-            if (result.isSuccess()) {
-                log.info("Successfully executed transition from Prompt to Working");
-                return true;
-            } else {
-                log.warn("Failed to execute transition: {}", result.getActionDescription());
-                return false;
+            try (var timer = brobotLogger != null ? 
+                    brobotLogger.startTimer("ChainedActionExecution") : null) {
+                
+                ActionResult result = action.perform(findClickType, target);
+                log.debug("Action result: success={}, description={}", result.isSuccess(), result.getActionDescription());
+                
+                if (brobotLogger != null) {
+                    brobotLogger.log()
+                        .action("CHAIN")
+                        .target(promptState.getClaudePrompt())
+                        .result(result)
+                        .metadata("chainedActions", "FIND->CLICK->TYPE")
+                        .metadata("description", result.getActionDescription())
+                        .performance("executionTime", timer != null ? timer.stop() : 0)
+                        .log();
+                }
+                
+                if (result.isSuccess()) {
+                    log.info("Successfully executed transition from Prompt to Working");
+                    
+                    if (brobotLogger != null) {
+                        brobotLogger.log()
+                            .transition("PromptState", "WorkingState")
+                            .success(true)
+                            .metadata("transitionMethod", "ChainedAction")
+                            .log();
+                    }
+                    
+                    return true;
+                } else {
+                    log.warn("Failed to execute transition: {}", result.getActionDescription());
+                    
+                    if (brobotLogger != null) {
+                        brobotLogger.log()
+                            .transition("PromptState", "WorkingState")
+                            .success(false)
+                            .metadata("failureReason", result.getActionDescription())
+                            .metadata("transitionMethod", "ChainedAction")
+                            .screenshot(captureScreenshotPath())
+                            .log();
+                    }
+                    
+                    return false;
+                }
             }
             
         } catch (Exception e) {
             log.error("Error during Prompt to Working transition", e);
+            
+            if (brobotLogger != null) {
+                brobotLogger.log()
+                    .error(e)
+                    .message("Error during Prompt to Working transition")
+                    .metadata("errorType", e.getClass().getSimpleName())
+                    .metadata("errorMessage", e.getMessage())
+                    .screenshot(captureScreenshotPath())
+                    .log();
+            }
+            
             return false;
         }
+    }
+    
+    private String captureScreenshotPath() {
+        // In a real implementation, this would capture and save a screenshot
+        return "/tmp/transition-error-" + System.currentTimeMillis() + ".png";
     }
 }

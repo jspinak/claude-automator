@@ -9,6 +9,7 @@ logging:
     root: INFO
     com.claude.automator: DEBUG
     io.github.jspinak.brobot: INFO
+    io.github.jspinak.brobot.logging.unified: DEBUG  # Enable debug for unified logging
 
 # Brobot Configuration (v1.1.0+)
 # Only override values that differ from defaults in brobot-defaults.properties
@@ -22,3 +23,36 @@ brobot:
     startup-delay: 2
   sikuli:
     highlight: true
+  # New unified logging configuration
+  logging:
+    console:
+      level: HIGH           # Show all logs in console
+      colors: true          # Enable ANSI colors
+      format: compact       # Use compact format
+    structured:
+      enabled: true         # Enable structured logging
+      format: json          # Log in JSON format
+      sink: file           # Write to file
+      file:
+        path: logs/claude-automator-structured.json
+        rotation: daily
+        max-size: 100MB
+    performance:
+      enabled: true         # Track performance metrics
+      metrics-export: none  # No external metrics export for now
+    context:
+      include-thread-name: true
+      include-timestamp: true
+      include-hostname: false
+
+# Claude Automator specific configuration
+claude:
+  automator:
+    monitoring:
+      check-interval: 2     # seconds between icon checks
+      initial-delay: 5      # seconds before first check
+      log-frequency: 10     # log "still visible" every N checks
+    debug:
+      extensive-logging: true  # Enable all debug logging
+      log-screenshots: true    # Log screenshot paths on errors
+      log-performance: true    # Log all performance metrics
