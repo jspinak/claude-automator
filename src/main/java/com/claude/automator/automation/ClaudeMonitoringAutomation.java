@@ -9,6 +9,8 @@ import org.sikuli.script.Screen;
 import io.github.jspinak.brobot.navigation.transition.StateNavigator;
 import io.github.jspinak.brobot.navigation.service.StateService;
 import io.github.jspinak.brobot.statemanagement.StateMemory;
+
+import java.awt.Rectangle;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -180,19 +182,54 @@ public class ClaudeMonitoringAutomation {
             // For Windows (not WSL), check directly if we can access screen
             if (isWindows && !isWSL) {
                 try {
-                    Screen screen = new Screen();
-                    int width = screen.getBounds().width;
-                    int height = screen.getBounds().height;
+                    // Get all screens/monitors
+                    int numScreens = Screen.getNumberScreens();
+                    System.out.println("[" + timestamp + "] Number of screens detected: " + numScreens);
+                    
+                    // Also check Java's GraphicsEnvironment for comparison
+                    java.awt.GraphicsEnvironment ge = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment();
+                    java.awt.GraphicsDevice[] devices = ge.getScreenDevices();
+                    System.out.println("[" + timestamp + "] Java GraphicsEnvironment reports " + devices.length + " devices");
+                    
+                    for (int i = 0; i < devices.length; i++) {
+                        java.awt.Rectangle bounds = devices[i].getDefaultConfiguration().getBounds();
+                        double scaleFactor = devices[i].getDefaultConfiguration().getDefaultTransform().getScaleX();
+                        System.out.println("[" + timestamp + "] GraphicsDevice " + i + ": " + bounds + 
+                                         " (Scale: " + scaleFactor + "x)");
+                    }
+                    
+                    System.out.println("[" + timestamp + "] SikuliX Screen information:");
+                    for (int i = 0; i < numScreens; i++) {
+                        Screen screen = new Screen(i);
+                        Rectangle bounds = screen.getBounds();
+                        System.out.println("[" + timestamp + "] Screen " + i + ": " + bounds + 
+                                         " (Primary: " + (i == 0) + ")");
+                        
+                        brobotLogger.log()
+                            .observation("Monitor detected")
+                            .metadata("screenId", i)
+                            .metadata("width", bounds.width)
+                            .metadata("height", bounds.height)
+                            .metadata("x", bounds.x)
+                            .metadata("y", bounds.y)
+                            .metadata("isPrimary", i == 0)
+                            .log();
+                    }
+                    
+                    // Check primary screen
+                    Screen primaryScreen = new Screen(0);
+                    int width = primaryScreen.getBounds().width;
+                    int height = primaryScreen.getBounds().height;
                     
                     if (width > 0 && height > 0) {
                         displayAvailable = true;
-                        System.out.println("[" + timestamp + "] Windows display detected: " + screen.getBounds());
+                        System.out.println("[" + timestamp + "] Primary Windows display: " + primaryScreen.getBounds());
                         
                         brobotLogger.log()
                             .observation("Windows display detected successfully")
-                            .metadata("screenWidth", width)
-                            .metadata("screenHeight", height)
-                            .metadata("bounds", screen.getBounds().toString())
+                            .metadata("primaryScreenWidth", width)
+                            .metadata("primaryScreenHeight", height)
+                            .metadata("totalScreens", numScreens)
                             .log();
                     }
                 } catch (Exception e) {
