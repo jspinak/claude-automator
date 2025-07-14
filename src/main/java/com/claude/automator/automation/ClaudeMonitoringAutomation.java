@@ -102,8 +102,15 @@ public class ClaudeMonitoringAutomation {
                     );
                 }
                 
-                // Log highlighting action
+                // Log highlighting action and region details
                 log.info("Highlighting prompt search regions - regionCount: {}", searchRegions.size());
+                for (io.github.jspinak.brobot.model.element.Region region : searchRegions) {
+                    log.info("Region to highlight: x={}, y={}, w={}, h={}", 
+                        region.x(), region.y(), region.w(), region.h());
+                }
+                
+                // Check mock mode
+                log.info("Mock mode status: {}", io.github.jspinak.brobot.config.FrameworkSettings.mock);
                 
                 // Highlight the search regions
                 highlightManager.highlightSearchRegions(searchRegions);
