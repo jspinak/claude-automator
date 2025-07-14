@@ -7,6 +7,7 @@ import org.sikuli.script.Pattern;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 /**
  * Utility class to help diagnose image loading issues.
@@ -39,10 +40,10 @@ public class ImageLoadingDiagnostics {
         String bundlePath = ImagePath.getBundlePath();
         log.info("Bundle Path: {}", bundlePath);
         
-        String[] paths = ImagePath.getPaths();
-        log.info("Image Paths ({} total):", paths.length);
-        for (String path : paths) {
-            log.info("  - {}", path);
+        List<ImagePath.PathEntry> pathEntries = ImagePath.getPaths();
+        log.info("Image Paths ({} total):", pathEntries.size());
+        for (ImagePath.PathEntry entry : pathEntries) {
+            log.info("  - {}", entry.getPath());
         }
         
         // 5. Test loading specific images
@@ -132,10 +133,10 @@ public class ImageLoadingDiagnostics {
         // SikuliX configuration
         report.append("SikuliX Configuration:\n");
         report.append("  Bundle Path: ").append(ImagePath.getBundlePath()).append("\n");
-        String[] paths = ImagePath.getPaths();
-        report.append("  Image Paths: ").append(paths.length).append(" configured\n");
-        for (String path : paths) {
-            report.append("    - ").append(path).append("\n");
+        List<ImagePath.PathEntry> pathEntries = ImagePath.getPaths();
+        report.append("  Image Paths: ").append(pathEntries.size()).append(" configured\n");
+        for (ImagePath.PathEntry entry : pathEntries) {
+            report.append("    - ").append(entry.getPath()).append("\n");
         }
         
         return report.toString();

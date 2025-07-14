@@ -13,6 +13,7 @@ import java.io.File;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 /**
  * Configuration class to set up SikuliX ImagePath for loading images.
@@ -103,24 +104,30 @@ public class ImagePathConfig implements InitializingBean {
             // Also set the bundle path for SikuliX
             if (pathAdded) {
                 // Get the first path we added
-                String bundlePath = ImagePath.getPaths()[0];
-                ImagePath.setBundlePath(bundlePath);
-                log.info("Set SikuliX bundle path to: {}", bundlePath);
+                List<ImagePath.PathEntry> pathEntries = ImagePath.getPaths();
+                if (!pathEntries.isEmpty()) {
+                    String bundlePath = pathEntries.get(0).getPath();
+                    ImagePath.setBundlePath(bundlePath);
+                    log.info("Set SikuliX bundle path to: {}", bundlePath);
+                }
             }
             
             // Log final configuration
-            String[] paths = ImagePath.getPaths();
-            log.info("SikuliX ImagePath configured with {} path(s):", paths.length);
-            for (String path : paths) {
-                log.info("  - {}", path);
+            List<ImagePath.PathEntry> pathEntries = ImagePath.getPaths();
+            log.info("SikuliX ImagePath configured with {} path(s):", pathEntries.size());
+            for (ImagePath.PathEntry entry : pathEntries) {
+                log.info("  - {}", entry.getPath());
             }
             
             // Log with BrobotLogger if available
             if (brobotLogger != null) {
+                String[] pathStrings = pathEntries.stream()
+                    .map(ImagePath.PathEntry::getPath)
+                    .toArray(String[]::new);
                 brobotLogger.log()
                     .observation("SikuliX ImagePath configured")
-                    .metadata("pathCount", paths.length)
-                    .metadata("paths", paths)
+                    .metadata("pathCount", pathEntries.size())
+                    .metadata("paths", pathStrings)
                     .metadata("bundlePath", ImagePath.getBundlePath())
                     .log();
             }
@@ -170,7 +177,7 @@ public class ImagePathConfig implements InitializingBean {
             log.error("  images/prompt/claude-prompt-1.png");
             
             if (brobotLogger != null) {
-                brobotLogger.error("Image loading verification failed for all test images");
+                brobotLogger.error("Image loading verification failed for all test images", new RuntimeException("No test images could be loaded"));
             }
         } catch (Exception e) {
             log.error("Error during image loading verification", e);

@@ -11,6 +11,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 /**
  * Verifies that images are accessible on startup.
@@ -98,10 +99,10 @@ public class ImageVerifier implements ApplicationRunner {
         }
         
         // Log final ImagePath configuration
-        String[] paths = ImagePath.getPaths();
-        log.info("Final SikuliX ImagePath configuration ({} paths):", paths.length);
-        for (String path : paths) {
-            log.info("  - {}", path);
+        List<ImagePath.PathEntry> pathEntries = ImagePath.getPaths();
+        log.info("Final SikuliX ImagePath configuration ({} paths):", pathEntries.size());
+        for (ImagePath.PathEntry entry : pathEntries) {
+            log.info("  - {}", entry.getPath());
         }
         
         log.info("=== Image Verification Complete ===");

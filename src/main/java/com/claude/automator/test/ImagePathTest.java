@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * Test class to verify ImagePath configuration.
@@ -23,10 +24,10 @@ public class ImagePathTest implements CommandLineRunner {
         log.info("=== Running ImagePath Test ===");
         
         // Log current ImagePath configuration
-        String[] paths = ImagePath.getPaths();
-        log.info("Current ImagePath has {} paths:", paths.length);
-        for (String path : paths) {
-            log.info("  - {}", path);
+        List<ImagePath.PathEntry> pathEntries = ImagePath.getPaths();
+        log.info("Current ImagePath has {} paths:", pathEntries.size());
+        for (ImagePath.PathEntry entry : pathEntries) {
+            log.info("  - {}", entry.getPath());
         }
         
         // Test different ways to load the image
@@ -45,8 +46,8 @@ public class ImagePathTest implements CommandLineRunner {
             log.info("  Direct file exists: {}", file.exists());
             
             // Try with ImagePath
-            for (String imagePath : paths) {
-                File fullPath = new File(imagePath, testPath);
+            for (ImagePath.PathEntry entry : pathEntries) {
+                File fullPath = new File(entry.getPath(), testPath);
                 if (fullPath.exists()) {
                     log.info("  Found in ImagePath: {}", fullPath.getAbsolutePath());
                 }

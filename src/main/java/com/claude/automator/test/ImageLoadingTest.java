@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.List;
 
 /**
  * Test component to diagnose image loading issues.
@@ -28,9 +29,10 @@ public class ImageLoadingTest implements CommandLineRunner {
         log.info("===== Image Loading Test Starting =====");
         
         // Log current ImagePath configuration
-        String[] paths = ImagePath.getPaths();
-        log.info("Current ImagePath has {} paths:", paths.length);
-        for (String path : paths) {
+        List<ImagePath.PathEntry> pathEntries = ImagePath.getPaths();
+        log.info("Current ImagePath has {} paths:", pathEntries.size());
+        for (ImagePath.PathEntry entry : pathEntries) {
+            String path = entry.getPath();
             log.info("  - {}", path);
             File dir = new File(path);
             if (dir.exists() && dir.isDirectory()) {
@@ -66,8 +68,8 @@ public class ImageLoadingTest implements CommandLineRunner {
             }
             
             // Test 2: Check if file exists with .png extension
-            for (String path : paths) {
-                File imageFile = new File(path, imagePath + (imagePath.endsWith(".png") ? "" : ".png"));
+            for (ImagePath.PathEntry entry : pathEntries) {
+                File imageFile = new File(entry.getPath(), imagePath + (imagePath.endsWith(".png") ? "" : ".png"));
                 if (imageFile.exists()) {
                     log.info("  ✓ Found file at: {}", imageFile.getAbsolutePath());
                 }
@@ -105,7 +107,7 @@ public class ImageLoadingTest implements CommandLineRunner {
         if (brobotLogger != null) {
             brobotLogger.log()
                 .observation("Image loading test completed")
-                .metadata("imagePathCount", paths.length)
+                .metadata("imagePathCount", pathEntries.size())
                 .metadata("bundlePath", ImagePath.getBundlePath())
                 .log();
         }
