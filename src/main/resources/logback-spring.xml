@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- Console appender with simple pattern -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!-- Simple pattern: time, level, and message only -->
+            <pattern>%d{HH:mm:ss} %-5level %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Root logger configuration -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+    <!-- Specific logger configurations to reduce noise -->
+    <logger name="io.github.jspinak.brobot" level="WARN"/>
+    <logger name="io.github.jspinak.brobot.action" level="ERROR"/>
+    <logger name="io.github.jspinak.brobot.logging" level="ERROR"/>
+    <logger name="com.claude.automator.automation" level="INFO"/>
+    <logger name="org.springframework" level="WARN"/>
+    <logger name="org.sikuli" level="ERROR"/>
+    
+    <!-- Disable verbose brobot internal logging -->
+    <logger name="io.github.jspinak.brobot.tools.logging" level="ERROR"/>
+    <logger name="io.github.jspinak.brobot.navigation" level="ERROR"/>
+    <logger name="io.github.jspinak.brobot.statemanagement" level="ERROR"/>
+</configuration>
