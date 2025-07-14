@@ -1,5 +1,6 @@
 package com.claude.automator;
 
+import com.claude.automator.util.ImageLoadingDiagnostics;
 import io.github.jspinak.brobot.logging.unified.BrobotLogger;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
@@ -51,6 +52,9 @@ public class ClaudeAutomatorApplication {
                     log.info("Shutting down Claude Automator...");
                 }));
                 
+                // Run diagnostics after startup
+                runStartupDiagnostics(context);
+                
                 // Keep the main thread alive
                 Thread.currentThread().join();
             }
@@ -100,5 +104,27 @@ public class ClaudeAutomatorApplication {
         // Log the final decision
         log.info("Headless mode configuration: os.name={}, WSL={}, profile={}, java.awt.headless={}",
                 os, isWSL, profile, System.getProperty("java.awt.headless"));
+    }
+    
+    private static void runStartupDiagnostics(ConfigurableApplicationContext context) {
+        log.info("Running startup diagnostics...");
+        try {
+            // Wait a moment for everything to initialize
+            Thread.sleep(1000);
+            
+            // Run image loading diagnostics
+            ImageLoadingDiagnostics.runDiagnostics();
+            
+            // Log the diagnostic report with BrobotLogger
+            if (brobotLogger != null) {
+                String report = ImageLoadingDiagnostics.getDiagnosticReport();
+                brobotLogger.log()
+                    .observation("Startup diagnostics completed")
+                    .metadata("diagnosticReport", report)
+                    .log();
+            }
+        } catch (Exception e) {
+            log.error("Error running startup diagnostics", e);
+        }
     }
 }
