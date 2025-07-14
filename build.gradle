@@ -33,10 +33,5 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 
-// Copy images to build directory
-task copyImages(type: Copy) {
-    from 'images'
-    into "$buildDir/resources/main/images"
-}
-
-processResources.dependsOn copyImages
+// Images are loaded directly from the images directory by Brobot/Sikuli
+// No need to copy them to build resources
