@@ -130,13 +130,11 @@ public class ClaudeMonitoringAutomation {
                     retrieveWorkingStateId();
                 }
                 
-                // Check if Working state is active
-                if (!stateMemory.getActiveStates().contains(workingStateId)) {
-                    handleInactiveWorkingState();
-                    return; // Skip icon check this iteration
-                }
+                // BYPASS STATE CHECK FOR NOW - directly check icon visibility
+                // This allows us to see highlighting even if state navigation fails
+                log.info("Bypassing state check - directly checking icon visibility");
                 
-                // Perform icon visibility check
+                // Perform icon visibility check regardless of state
                 checkIconVisibility();
                 
             } catch (Exception e) {
@@ -361,7 +359,7 @@ public class ClaudeMonitoringAutomation {
         try {
             // Get search regions from the pattern
             java.util.List<io.github.jspinak.brobot.model.element.Region> searchRegions = 
-                workingState.getClaudeIcon().getRegions();
+                workingState.getClaudeIcon().getAllSearchRegions();
             
             // If no specific regions, use full screen
             if (searchRegions.isEmpty()) {
@@ -370,12 +368,18 @@ public class ClaudeMonitoringAutomation {
                 );
             }
             
+            // Log configuration status
+            log.info("Highlighting configuration - enabled: {}, mock: {}", 
+                highlightManager != null, 
+                io.github.jspinak.brobot.config.FrameworkSettings.mock);
+            
             // Highlight the search regions
             highlightManager.highlightSearchRegions(searchRegions);
             
             brobotLogger.log()
-                .observation("Highlighted search regions")
+                .observation("Called highlightSearchRegions")
                 .metadata("regionCount", searchRegions.size())
+                .metadata("mockMode", io.github.jspinak.brobot.config.FrameworkSettings.mock)
                 .log();
                 
             // Small pause to see the highlight
