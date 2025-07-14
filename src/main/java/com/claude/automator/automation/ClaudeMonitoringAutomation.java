@@ -162,50 +162,83 @@ public class ClaudeMonitoringAutomation {
         boolean displayAvailable = false;
         
         try (var timer = brobotLogger.startTimer("DisplayEnvironmentCheck")) {
+            String os = System.getProperty("os.name", "").toLowerCase();
+            boolean isWindows = os.contains("windows");
+            boolean isWSL = System.getenv("WSL_DISTRO_NAME") != null || 
+                           System.getenv("WSL_INTEROP") != null;
             String display = System.getenv("DISPLAY");
             
             brobotLogger.log()
                 .observation("Checking display environment")
+                .metadata("os", os)
+                .metadata("isWindows", isWindows)
+                .metadata("isWSL", isWSL)
                 .metadata("DISPLAY", display != null ? display : "not set")
+                .metadata("java.awt.headless", System.getProperty("java.awt.headless"))
                 .log();
             
-            if (display != null && !display.isEmpty()) {
-                Screen screen = new Screen();
-                int width = screen.getBounds().width;
-                int height = screen.getBounds().height;
-                
-                if (width > 0 && height > 0) {
-                    displayAvailable = true;
-                    System.out.println("[" + timestamp + "] Display detected: " + screen.getBounds());
+            // For Windows (not WSL), check directly if we can access screen
+            if (isWindows && !isWSL) {
+                try {
+                    Screen screen = new Screen();
+                    int width = screen.getBounds().width;
+                    int height = screen.getBounds().height;
                     
+                    if (width > 0 && height > 0) {
+                        displayAvailable = true;
+                        System.out.println("[" + timestamp + "] Windows display detected: " + screen.getBounds());
+                        
+                        brobotLogger.log()
+                            .observation("Windows display detected successfully")
+                            .metadata("screenWidth", width)
+                            .metadata("screenHeight", height)
+                            .metadata("bounds", screen.getBounds().toString())
+                            .log();
+                    }
+                } catch (Exception e) {
+                    System.out.println("[" + timestamp + "] Cannot access Windows display: " + e.getMessage());
                     brobotLogger.log()
-                        .observation("Display detected successfully")
-                        .metadata("screenWidth", width)
-                        .metadata("screenHeight", height)
-                        .metadata("bounds", screen.getBounds().toString())
-                        .log();
-                } else {
-                    System.out.println("[" + timestamp + "] Display has zero dimensions - X11 server may not be running");
-                    
-                    brobotLogger.log()
-                        .observation("Display has zero dimensions")
-                        .metadata("width", width)
-                        .metadata("height", height)
-                        .metadata("issue", "X11 server may not be running")
+                        .error(e)
+                        .message("Cannot access Windows display")
                         .log();
                 }
-            } else {
-                System.out.println("[" + timestamp + "] DISPLAY environment variable not set");
+            } 
+            // For Linux/WSL, check DISPLAY variable
+            else if (display != null && !display.isEmpty()) {
+                try {
+                    Screen screen = new Screen();
+                    int width = screen.getBounds().width;
+                    int height = screen.getBounds().height;
+                    
+                    if (width > 0 && height > 0) {
+                        displayAvailable = true;
+                        System.out.println("[" + timestamp + "] X11 display detected: " + screen.getBounds());
+                        
+                        brobotLogger.log()
+                            .observation("X11 display detected successfully")
+                            .metadata("screenWidth", width)
+                            .metadata("screenHeight", height)
+                            .metadata("bounds", screen.getBounds().toString())
+                            .log();
+                    }
+                } catch (Exception e) {
+                    System.out.println("[" + timestamp + "] X11 display has zero dimensions - X11 server may not be running");
+                    brobotLogger.observation("X11 display not accessible");
+                }
+            } else if (!isWindows || isWSL) {
+                System.out.println("[" + timestamp + "] DISPLAY environment variable not set (required for Linux/WSL)");
                 brobotLogger.observation("DISPLAY environment variable not set");
             }
-        } catch (Exception e) {
-            System.out.println("[" + timestamp + "] Cannot access display: " + e.getMessage());
             
-            brobotLogger.log()
-                .error(e)
-                .message("Cannot access display")
-                .metadata("errorMessage", e.getMessage())
-                .log();
+            // Check if we're in headless mode
+            if ("true".equals(System.getProperty("java.awt.headless"))) {
+                displayAvailable = false;
+                System.out.println("[" + timestamp + "] Running in headless mode - display operations disabled");
+                brobotLogger.observation("Running in headless mode");
+            }
+        } catch (Exception e) {
+            System.out.println("[" + timestamp + "] Error checking display environment: " + e.getMessage());
+            brobotLogger.error("Error checking display environment", e);
         }
         
         return displayAvailable;
