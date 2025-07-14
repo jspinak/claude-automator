@@ -1,5 +1,6 @@
 package com.claude.automator.automation;
 
+import com.claude.automator.states.PromptState;
 import com.claude.automator.states.WorkingState;
 import io.github.jspinak.brobot.action.Action;
 import io.github.jspinak.brobot.action.ActionResult;
@@ -33,6 +34,7 @@ public class ClaudeMonitoringAutomation {
     private final StateNavigator stateNavigator;
     private final Action action;
     private final WorkingState workingState;
+    private final PromptState promptState;
     private final BrobotLogger brobotLogger;
     private final HighlightManager highlightManager;
     
@@ -66,23 +68,34 @@ public class ClaudeMonitoringAutomation {
         // We'll retrieve it on first check since states are registered in ApplicationReadyEvent
         
         // Schedule monitoring task to run every 2 seconds
-        scheduler.scheduleWithFixedDelay(this::checkClaudeIconStatus, 
+        scheduler.scheduleWithFixedDelay(this::getClaudeWorking,
                 5, // initial delay
                 2, // period between checks
                 TimeUnit.SECONDS);
                 
         brobotLogger.observation("Monitoring scheduler started successfully");
     }
+
+    private void getClaudeWorking() {
+        if (!running) {
+            brobotLogger.observation("getClaudeWorking skipped - automation stopped");
+            return;
+        }
+
+        if (claudePromptIsVisible()) checkClaudeIconStatus();
+    }
+
+    private boolean claudePromptIsVisible() {
+        PatternFindOptions patternFindOptions = new PatternFindOptions.Builder()
+                .setPauseBeforeBegin(0.5)
+                .build();
+        return action.perform(patternFindOptions, promptState.getClaudePrompt()).isSuccess();
+    }
     
     /**
      * Checks if Claude icon is visible and handles state transitions accordingly.
      */
     private void checkClaudeIconStatus() {
-        if (!running) {
-            brobotLogger.observation("Monitoring check skipped - automation stopped");
-            return;
-        }
-
         checkCount++;
         long checkStartTime = System.currentTimeMillis();
         
