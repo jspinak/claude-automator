@@ -139,20 +139,38 @@ public class ImagePathConfig implements InitializingBean {
     private void verifyImageLoading() {
         try {
             // Try to load a test image using the same mechanism as Pattern
-            String testImage = "working/claude-icon-1";
-            org.sikuli.script.Pattern testPattern = new org.sikuli.script.Pattern(testImage);
+            String[] testImages = {
+                "working/claude-icon-1",
+                "working/claude-icon-1.png",
+                "prompt/claude-prompt-1",
+                "prompt/claude-prompt-1.png"
+            };
             
-            if (testPattern.getBImage() != null) {
-                log.info("Successfully verified image loading with test image: {}", testImage);
-                if (brobotLogger != null) {
-                    brobotLogger.observation("Image loading verification successful");
+            for (String testImage : testImages) {
+                try {
+                    org.sikuli.script.Pattern testPattern = new org.sikuli.script.Pattern(testImage);
+                    
+                    if (testPattern.getBImage() != null) {
+                        log.info("Successfully verified image loading with test image: {}", testImage);
+                        if (brobotLogger != null) {
+                            brobotLogger.observation("Image loading verification successful for: " + testImage);
+                        }
+                        return; // Success!
+                    } else {
+                        log.warn("Failed to load test image: {}", testImage);
+                    }
+                } catch (Exception e) {
+                    log.warn("Exception loading test image {}: {}", testImage, e.getMessage());
                 }
-            } else {
-                log.warn("Failed to load test image: {}", testImage);
-                log.warn("Make sure the images directory contains the expected structure (e.g., images/working/claude-icon-1.png)");
-                if (brobotLogger != null) {
-                    brobotLogger.warning("Image loading verification failed for: " + testImage);
-                }
+            }
+            
+            log.error("Failed to load any test images!");
+            log.error("Make sure the images directory contains the expected structure:");
+            log.error("  images/working/claude-icon-1.png");
+            log.error("  images/prompt/claude-prompt-1.png");
+            
+            if (brobotLogger != null) {
+                brobotLogger.error("Image loading verification failed for all test images");
             }
         } catch (Exception e) {
             log.error("Error during image loading verification", e);

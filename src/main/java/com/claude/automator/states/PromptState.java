@@ -31,7 +31,7 @@ public class PromptState {
         
         // Initialize the claude prompt image
         claudePrompt = new StateImage.Builder()
-            .addPatterns("prompt/claude-prompt-1","prompt/claude-prompt-2","prompt/claude-prompt-3")
+            .addPatterns("prompt/claude-prompt-1.png","prompt/claude-prompt-2.png","prompt/claude-prompt-3.png")
             .setName("ClaudePrompt")
             .build();
         
