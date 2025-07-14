@@ -12,7 +12,7 @@ import jakarta.annotation.PostConstruct;
  */
 @Configuration
 @Slf4j
-public class ExecutionEnvironmentConfig {
+public class ClaudeExecutionEnvironmentConfig {
     
     @Value("${brobot.framework.mock:false}")
     private boolean mockMode;
