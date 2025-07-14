@@ -77,7 +77,9 @@ public class ImageVerifier implements ApplicationRunner {
                 "working/claude-icon-2.png", 
                 "working/claude-icon-3.png",
                 "working/claude-icon-4.png",
-                "prompt/claude-prompt.png"
+                "prompt/claude-prompt-1.png",
+                "prompt/claude-prompt-2.png",
+                "prompt/claude-prompt-3.png"
             };
             
             boolean allImagesFound = true;

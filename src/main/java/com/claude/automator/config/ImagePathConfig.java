@@ -106,9 +106,15 @@ public class ImagePathConfig implements InitializingBean {
                 // Get the first path we added
                 List<ImagePath.PathEntry> pathEntries = ImagePath.getPaths();
                 if (!pathEntries.isEmpty()) {
-                    String bundlePath = pathEntries.get(0).getPath();
-                    ImagePath.setBundlePath(bundlePath);
-                    log.info("Set SikuliX bundle path to: {}", bundlePath);
+                    // Find first non-null entry
+                    for (ImagePath.PathEntry entry : pathEntries) {
+                        if (entry != null && entry.getPath() != null) {
+                            String bundlePath = entry.getPath();
+                            ImagePath.setBundlePath(bundlePath);
+                            log.info("Set SikuliX bundle path to: {}", bundlePath);
+                            break;
+                        }
+                    }
                 }
             }
             
@@ -116,17 +122,20 @@ public class ImagePathConfig implements InitializingBean {
             List<ImagePath.PathEntry> pathEntries = ImagePath.getPaths();
             log.info("SikuliX ImagePath configured with {} path(s):", pathEntries.size());
             for (ImagePath.PathEntry entry : pathEntries) {
-                log.info("  - {}", entry.getPath());
+                if (entry != null && entry.getPath() != null) {
+                    log.info("  - {}", entry.getPath());
+                }
             }
             
             // Log with BrobotLogger if available
             if (brobotLogger != null) {
                 String[] pathStrings = pathEntries.stream()
+                    .filter(entry -> entry != null && entry.getPath() != null)
                     .map(ImagePath.PathEntry::getPath)
                     .toArray(String[]::new);
                 brobotLogger.log()
                     .observation("SikuliX ImagePath configured")
-                    .metadata("pathCount", pathEntries.size())
+                    .metadata("pathCount", pathStrings.length)
                     .metadata("paths", pathStrings)
                     .metadata("bundlePath", ImagePath.getBundlePath())
                     .log();
