@@ -88,6 +88,35 @@ public class ClaudeMonitoringAutomation {
     }
 
     private boolean claudePromptIsVisible() {
+        // Highlight search regions before find operation
+        if (highlightManager != null) {
+            try {
+                // Get search regions from the prompt pattern
+                java.util.List<io.github.jspinak.brobot.model.element.Region> searchRegions = 
+                    promptState.getClaudePrompt().getAllSearchRegions();
+                
+                // If no specific regions, use full screen
+                if (searchRegions.isEmpty()) {
+                    searchRegions = java.util.Collections.singletonList(
+                        new io.github.jspinak.brobot.model.element.Region()
+                    );
+                }
+                
+                // Log highlighting action
+                log.info("Highlighting prompt search regions - regionCount: {}", searchRegions.size());
+                
+                // Highlight the search regions
+                highlightManager.highlightSearchRegions(searchRegions);
+                
+                // Small pause to see the highlight
+                Thread.sleep(500);
+            } catch (Exception e) {
+                log.warn("Failed to highlight prompt search regions", e);
+            }
+        } else {
+            log.debug("HighlightManager not available - skipping visual feedback");
+        }
+        
         PatternFindOptions patternFindOptions = new PatternFindOptions.Builder()
                 .setPauseBeforeBegin(0.5)
                 .build();
@@ -390,10 +419,7 @@ public class ClaudeMonitoringAutomation {
             
             // Log visual feedback configuration
             if (visualFeedbackConfig != null) {
-                log.info("Visual feedback config - enabled: {}, autoHighlightFinds: {}, autoHighlightSearchRegions: {}",
-                    visualFeedbackConfig.isEnabled(),
-                    visualFeedbackConfig.isAutoHighlightFinds(),
-                    visualFeedbackConfig.isAutoHighlightSearchRegions());
+                log.info("Visual feedback config bean available");
             }
             
             // Highlight the search regions
