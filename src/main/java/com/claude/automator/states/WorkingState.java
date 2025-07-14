@@ -29,10 +29,10 @@ public class WorkingState {
         
         // Create the claude icon images
         claudeIcon = new StateImage.Builder()
-            .addPatterns("working/claude-icon-1.png", 
-                        "working/claude-icon-2.png", 
-                        "working/claude-icon-3.png", 
-                        "working/claude-icon-4.png")
+            .addPatterns("working/claude-icon-1", 
+                        "working/claude-icon-2", 
+                        "working/claude-icon-3", 
+                        "working/claude-icon-4")
             .setName("ClaudeIcon")
             .build();
         
