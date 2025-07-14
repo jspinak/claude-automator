@@ -5,6 +5,7 @@ import io.github.jspinak.brobot.action.Action;
 import io.github.jspinak.brobot.action.ActionResult;
 import io.github.jspinak.brobot.action.basic.find.PatternFindOptions;
 import io.github.jspinak.brobot.logging.unified.BrobotLogger;
+import io.github.jspinak.brobot.tools.logging.visual.HighlightManager;
 import org.sikuli.script.Screen;
 import io.github.jspinak.brobot.navigation.transition.StateNavigator;
 import io.github.jspinak.brobot.navigation.service.StateService;
@@ -33,6 +34,7 @@ public class ClaudeMonitoringAutomation {
     private final Action action;
     private final WorkingState workingState;
     private final BrobotLogger brobotLogger;
+    private final HighlightManager highlightManager;
     
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private volatile boolean running = false;
@@ -355,9 +357,50 @@ public class ClaudeMonitoringAutomation {
             .metadata("iconPattern", workingState.getClaudeIcon().getName())
             .log();
         
+        // Highlight search regions before find operation
+        try {
+            // Get search regions from the pattern
+            java.util.List<io.github.jspinak.brobot.model.element.Region> searchRegions = 
+                workingState.getClaudeIcon().getRegions();
+            
+            // If no specific regions, use full screen
+            if (searchRegions.isEmpty()) {
+                searchRegions = java.util.Collections.singletonList(
+                    new io.github.jspinak.brobot.model.element.Region()
+                );
+            }
+            
+            // Highlight the search regions
+            highlightManager.highlightSearchRegions(searchRegions);
+            
+            brobotLogger.log()
+                .observation("Highlighted search regions")
+                .metadata("regionCount", searchRegions.size())
+                .log();
+                
+            // Small pause to see the highlight
+            Thread.sleep(500);
+        } catch (Exception e) {
+            log.warn("Failed to highlight search regions", e);
+        }
+        
         try (var timer = brobotLogger.startTimer("IconVisibilityCheck")) {
             ActionResult result = action.perform(quickFind, workingState.getClaudeIcon());
             boolean iconFound = result.isSuccess();
+            
+            // Highlight matches if found
+            if (iconFound && !result.getMatchList().isEmpty()) {
+                try {
+                    highlightManager.highlightMatches(result.getMatchList());
+                    
+                    brobotLogger.log()
+                        .observation("Highlighted found matches")
+                        .metadata("matchCount", result.getMatchList().size())
+                        .log();
+                } catch (Exception e) {
+                    log.warn("Failed to highlight matches", e);
+                }
+            }
             
             brobotLogger.log()
                 .action("FIND")
