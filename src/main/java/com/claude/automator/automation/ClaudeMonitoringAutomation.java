@@ -112,8 +112,23 @@ public class ClaudeMonitoringAutomation {
                 // Check mock mode
                 log.info("Mock mode status: {}", io.github.jspinak.brobot.config.FrameworkSettings.mock);
                 
-                // Highlight the search regions
-                highlightManager.highlightSearchRegions(searchRegions);
+                // Try using the highlight action directly
+                log.info("Attempting to highlight {} search regions", searchRegions.size());
+                
+                // Use highlight action instead of highlightManager
+                io.github.jspinak.brobot.action.basic.highlight.HighlightOptions highlightOptions = 
+                    new io.github.jspinak.brobot.action.basic.highlight.HighlightOptions.Builder()
+                        .setPauseAfterEnd(2.0) // Show highlight for 2 seconds
+                        .build();
+                
+                io.github.jspinak.brobot.action.ObjectCollection highlightCollection = 
+                    new io.github.jspinak.brobot.action.ObjectCollection.Builder()
+                        .withRegions(searchRegions.toArray(new io.github.jspinak.brobot.model.element.Region[0]))
+                        .build();
+                
+                log.info("Performing highlight action on regions");
+                action.perform(highlightOptions, highlightCollection);
+                log.info("Highlight action completed");
                 
                 // Small pause to see the highlight
                 Thread.sleep(500);
