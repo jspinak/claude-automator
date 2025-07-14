@@ -95,11 +95,31 @@ public class ClaudeMonitoringAutomation {
                 java.util.List<io.github.jspinak.brobot.model.element.Region> searchRegions = 
                     promptState.getClaudePrompt().getAllSearchRegions();
                 
-                // If no specific regions, use full screen
+                // If no specific regions, use actual screen size
                 if (searchRegions.isEmpty()) {
-                    searchRegions = java.util.Collections.singletonList(
-                        new io.github.jspinak.brobot.model.element.Region()
-                    );
+                    try {
+                        // Get the primary screen bounds
+                        org.sikuli.script.Screen primaryScreen = new org.sikuli.script.Screen(0);
+                        java.awt.Rectangle screenBounds = primaryScreen.getBounds();
+                        
+                        // Create a region that matches the actual screen size
+                        io.github.jspinak.brobot.model.element.Region fullScreenRegion = 
+                            new io.github.jspinak.brobot.model.element.Region(
+                                screenBounds.x, 
+                                screenBounds.y, 
+                                screenBounds.width, 
+                                screenBounds.height
+                            );
+                        
+                        searchRegions = java.util.Collections.singletonList(fullScreenRegion);
+                        log.info("Created full screen region: x={}, y={}, w={}, h={}", 
+                            screenBounds.x, screenBounds.y, screenBounds.width, screenBounds.height);
+                    } catch (Exception e) {
+                        log.warn("Failed to get screen bounds, using default region", e);
+                        searchRegions = java.util.Collections.singletonList(
+                            new io.github.jspinak.brobot.model.element.Region()
+                        );
+                    }
                 }
                 
                 // Log highlighting action and region details
