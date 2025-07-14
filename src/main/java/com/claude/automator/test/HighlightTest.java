@@ -37,7 +37,10 @@ public class HighlightTest implements CommandLineRunner {
                 
                 // Test 3: Create a match and highlight it
                 System.out.println("Test 3: Highlighting as a match");
-                Match testMatch = new Match(testRegion, 0.95); // 95% confidence
+                Match testMatch = new Match.Builder()
+                        .setRegion(testRegion)
+                        .setSimScore(0.95) // 95% confidence
+                        .build();
                 highlightManager.highlightMatches(Collections.singletonList(testMatch));
                 Thread.sleep(2500);
                 
