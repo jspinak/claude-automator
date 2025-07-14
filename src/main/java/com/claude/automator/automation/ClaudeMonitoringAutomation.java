@@ -433,8 +433,9 @@ public class ClaudeMonitoringAutomation {
                     .metadata("remainingActiveStates", stateMemory.getActiveStates())
                     .log();
                 
-                // Navigate back to Working state on next check
-                // (We let the next iteration handle navigation to avoid rapid transitions)
+                // Immediately navigate back to Working state
+                // This will trigger the PromptToWorkingTransition which types "continue\n"
+                handleInactiveWorkingState();
                 
             } else {
                 log.debug("Claude icon still visible");
