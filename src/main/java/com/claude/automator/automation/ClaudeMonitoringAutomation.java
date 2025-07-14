@@ -7,6 +7,7 @@ import io.github.jspinak.brobot.action.ActionResult;
 import io.github.jspinak.brobot.action.basic.find.PatternFindOptions;
 import io.github.jspinak.brobot.logging.unified.BrobotLogger;
 import io.github.jspinak.brobot.tools.logging.visual.HighlightManager;
+import io.github.jspinak.brobot.tools.logging.visual.VisualFeedbackConfig;
 import org.sikuli.script.Screen;
 import io.github.jspinak.brobot.navigation.transition.StateNavigator;
 import io.github.jspinak.brobot.navigation.service.StateService;
@@ -37,6 +38,7 @@ public class ClaudeMonitoringAutomation {
     private final PromptState promptState;
     private final BrobotLogger brobotLogger;
     private final HighlightManager highlightManager;
+    private final VisualFeedbackConfig visualFeedbackConfig;
     
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private volatile boolean running = false;
@@ -385,6 +387,14 @@ public class ClaudeMonitoringAutomation {
             log.info("Highlighting configuration - enabled: {}, mock: {}", 
                 highlightManager != null, 
                 io.github.jspinak.brobot.config.FrameworkSettings.mock);
+            
+            // Log visual feedback configuration
+            if (visualFeedbackConfig != null) {
+                log.info("Visual feedback config - enabled: {}, autoHighlightFinds: {}, autoHighlightSearchRegions: {}",
+                    visualFeedbackConfig.isEnabled(),
+                    visualFeedbackConfig.isAutoHighlightFinds(),
+                    visualFeedbackConfig.isAutoHighlightSearchRegions());
+            }
             
             // Highlight the search regions
             highlightManager.highlightSearchRegions(searchRegions);
