@@ -4,8 +4,13 @@ import com.claude.automator.states.PromptState;
 import com.claude.automator.states.WorkingState;
 import io.github.jspinak.brobot.action.Action;
 import io.github.jspinak.brobot.action.ActionResult;
+import io.github.jspinak.brobot.action.ObjectCollection;
+import io.github.jspinak.brobot.action.basic.click.ClickOptions;
 import io.github.jspinak.brobot.action.basic.find.PatternFindOptions;
+import io.github.jspinak.brobot.action.basic.highlight.HighlightOptions;
 import io.github.jspinak.brobot.logging.unified.BrobotLogger;
+import io.github.jspinak.brobot.model.element.Region;
+import io.github.jspinak.brobot.model.element.SearchRegions;
 import io.github.jspinak.brobot.tools.logging.visual.HighlightManager;
 import io.github.jspinak.brobot.tools.logging.visual.VisualFeedbackConfig;
 import org.sikuli.script.Screen;
@@ -47,6 +52,7 @@ public class ClaudeMonitoringAutomation {
     private boolean firstCheck = true;
     private int checkCount = 0;
     private long lastCheckDuration = 0;
+    private Region claudeIconRegion = null;
 
     /**
      * Starts the automation that monitors for Claude icon disappearance.
@@ -84,85 +90,40 @@ public class ClaudeMonitoringAutomation {
             return;
         }
 
-        if (claudePromptIsVisible()) checkClaudeIconStatus();
+        if (selectClaudePrompt()) checkClaudeIconStatus();
     }
 
-    private boolean claudePromptIsVisible() {
-        // Highlight search regions before find operation
-        if (highlightManager != null) {
-            try {
-                // Get search regions from the prompt pattern
-                java.util.List<io.github.jspinak.brobot.model.element.Region> searchRegions = 
-                    promptState.getClaudePrompt().getAllSearchRegions();
-                
-                // If no specific regions, use actual screen size
-                if (searchRegions.isEmpty()) {
-                    try {
-                        // Get the primary screen bounds
-                        org.sikuli.script.Screen primaryScreen = new org.sikuli.script.Screen(0);
-                        java.awt.Rectangle screenBounds = primaryScreen.getBounds();
-                        
-                        // Create a region that matches the actual screen size
-                        io.github.jspinak.brobot.model.element.Region fullScreenRegion = 
-                            new io.github.jspinak.brobot.model.element.Region(
-                                screenBounds.x, 
-                                screenBounds.y, 
-                                screenBounds.width, 
-                                screenBounds.height
-                            );
-                        
-                        searchRegions = java.util.Collections.singletonList(fullScreenRegion);
-                        log.info("Created full screen region: x={}, y={}, w={}, h={}", 
-                            screenBounds.x, screenBounds.y, screenBounds.width, screenBounds.height);
-                    } catch (Exception e) {
-                        log.warn("Failed to get screen bounds, using default region", e);
-                        searchRegions = java.util.Collections.singletonList(
-                            new io.github.jspinak.brobot.model.element.Region()
-                        );
-                    }
-                }
-                
-                // Log highlighting action and region details
-                log.info("Highlighting prompt search regions - regionCount: {}", searchRegions.size());
-                for (io.github.jspinak.brobot.model.element.Region region : searchRegions) {
-                    log.info("Region to highlight: x={}, y={}, w={}, h={}", 
-                        region.x(), region.y(), region.w(), region.h());
-                }
-                
-                // Check mock mode
-                log.info("Mock mode status: {}", io.github.jspinak.brobot.config.FrameworkSettings.mock);
-                
-                // Try using the highlight action directly
-                log.info("Attempting to highlight {} search regions", searchRegions.size());
-                
-                // Use highlight action instead of highlightManager
-                io.github.jspinak.brobot.action.basic.highlight.HighlightOptions highlightOptions = 
-                    new io.github.jspinak.brobot.action.basic.highlight.HighlightOptions.Builder()
-                        .setPauseAfterEnd(2.0) // Show highlight for 2 seconds
-                        .build();
-                
-                io.github.jspinak.brobot.action.ObjectCollection highlightCollection = 
-                    new io.github.jspinak.brobot.action.ObjectCollection.Builder()
-                        .withRegions(searchRegions.toArray(new io.github.jspinak.brobot.model.element.Region[0]))
-                        .build();
-                
-                log.info("Performing highlight action on regions");
-                action.perform(highlightOptions, highlightCollection);
-                log.info("Highlight action completed");
-                
-                // Small pause to see the highlight
-                Thread.sleep(500);
-            } catch (Exception e) {
-                log.warn("Failed to highlight prompt search regions", e);
-            }
-        } else {
-            log.debug("HighlightManager not available - skipping visual feedback");
-        }
-        
+    private boolean selectClaudePrompt() {
         PatternFindOptions patternFindOptions = new PatternFindOptions.Builder()
                 .setPauseBeforeBegin(0.5)
                 .build();
-        return action.perform(patternFindOptions, promptState.getClaudePrompt()).isSuccess();
+        ActionResult actionResult = action.perform(patternFindOptions, promptState.getClaudePrompt());
+        if (!actionResult.isSuccess() || actionResult.getBestMatch().isEmpty()) {
+            log.warn("Claude prompt not found - cannot proceed with monitoring");
+            brobotLogger.log()
+                .observation("Claude prompt not found")
+                .metadata("checkNumber", checkCount)
+                .metadata("actionResult", actionResult.toString())
+                .log();
+            return false;
+        }
+        Region matchRegion = actionResult.getBestMatch().get().getRegion();
+        log.info("Claude prompt found - proceeding with monitoring");
+        if (claudeIconRegion == null) {
+            claudeIconRegion = new Region(matchRegion);
+            claudeIconRegion.adjust(3, 10, 30, 55);
+            workingState.getClaudeIcon().setSearchRegions(claudeIconRegion);
+            log.info("Claude icon region set to: {}", claudeIconRegion);
+        } else {
+            log.debug("Using existing Claude icon region: {}", claudeIconRegion);
+        }
+        ClickOptions clickOptions = new ClickOptions.Builder()
+                .build();
+        ObjectCollection clickCollection = new ObjectCollection.Builder()
+                .withRegions(matchRegion)
+                .build();
+        ActionResult clickResult = action.perform(clickOptions, clickCollection);
+        return clickResult.isSuccess();
     }
     
     /**
@@ -430,9 +391,21 @@ public class ClaudeMonitoringAutomation {
     }
     
     private void checkIconVisibility() {
-        // Quick check if icon exists (0.5 second timeout)
+        HighlightOptions highlightSearchRegion = new HighlightOptions.Builder()
+                .setHighlightSeconds(2) // Highlight for 2 seconds
+                .build();
+        ObjectCollection searchRegion = new ObjectCollection.Builder()
+                .withRegions(workingState.getClaudeIcon().getAllSearchRegions().toArray(new Region[0]))
+                .build();
+        action.perform(highlightSearchRegion, searchRegion);
+
+        // check if icon exists (5 second timeout)
+        SearchRegions searchRegionsForFind = new SearchRegions();
+        searchRegionsForFind.addSearchRegions(claudeIconRegion);
         PatternFindOptions quickFind = new PatternFindOptions.Builder()
                 .setPauseBeforeBegin(0.5)
+                .setSearchDuration(5)
+                .setSearchRegions(searchRegionsForFind)
                 .build();
         
         brobotLogger.log()
@@ -441,104 +414,47 @@ public class ClaudeMonitoringAutomation {
             .metadata("iconPattern", workingState.getClaudeIcon().getName())
             .log();
         
-        // Highlight search regions before find operation
-        try {
-            // Get search regions from the pattern
-            java.util.List<io.github.jspinak.brobot.model.element.Region> searchRegions = 
-                workingState.getClaudeIcon().getAllSearchRegions();
-            
-            // If no specific regions, use full screen
-            if (searchRegions.isEmpty()) {
-                searchRegions = java.util.Collections.singletonList(
-                    new io.github.jspinak.brobot.model.element.Region()
-                );
-            }
-            
-            // Log configuration status
-            log.info("Highlighting configuration - enabled: {}, mock: {}", 
-                highlightManager != null, 
-                io.github.jspinak.brobot.config.FrameworkSettings.mock);
-            
-            // Log visual feedback configuration
-            if (visualFeedbackConfig != null) {
-                log.info("Visual feedback config bean available");
-            }
-            
-            // Highlight the search regions
-            highlightManager.highlightSearchRegions(searchRegions);
-            
+        ActionResult result = action.perform(quickFind, workingState.getClaudeIcon());
+        boolean iconFound = result.isSuccess();
+
+        // Highlight matches if found
+        if (iconFound && !result.getMatchList().isEmpty()) {
+            HighlightOptions highlightOptions = new HighlightOptions.Builder()
+                    .setHighlightSeconds(2) // Highlight for 2 seconds
+                    .build();
+            ObjectCollection highlightCollection = new ObjectCollection.Builder()
+                    .withRegions(result.getMatchList().get(0).getRegion())
+                    .build();
+            action.perform(highlightOptions, highlightCollection);
+
+            highlightManager.highlightMatches(result.getMatchList());
+
             brobotLogger.log()
-                .observation("Called highlightSearchRegions")
-                .metadata("regionCount", searchRegions.size())
-                .metadata("mockMode", io.github.jspinak.brobot.config.FrameworkSettings.mock)
-                .log();
-                
-            // Small pause to see the highlight
-            Thread.sleep(500);
-        } catch (Exception e) {
-            log.warn("Failed to highlight search regions", e);
-        }
-        
-        try (var timer = brobotLogger.startTimer("IconVisibilityCheck")) {
-            ActionResult result = action.perform(quickFind, workingState.getClaudeIcon());
-            boolean iconFound = result.isSuccess();
-            
-            // Highlight matches if found
-            if (iconFound && !result.getMatchList().isEmpty()) {
-                try {
-                    highlightManager.highlightMatches(result.getMatchList());
-                    
-                    brobotLogger.log()
-                        .observation("Highlighted found matches")
-                        .metadata("matchCount", result.getMatchList().size())
-                        .log();
-                } catch (Exception e) {
-                    log.warn("Failed to highlight matches", e);
-                }
-            }
-            
+                    .observation("Highlighted found matches")
+                    .metadata("matchCount", result.getMatchList().size())
+                    .log();
+        } else {
+            log.info("Claude icon disappeared - removing Working state and reopening");
+
             brobotLogger.log()
-                .action("FIND")
-                .target(workingState.getClaudeIcon())
-                .result(result)
-                .metadata("iconFound", iconFound)
-                .metadata("checkNumber", checkCount)
-                .performance("findDuration", timer.stop())
+                .observation("Claude icon disappeared - triggering state reset")
+                .metadata("lastSeenCheck", checkCount - 1)
+                .metadata("action", "removeInactiveState")
                 .log();
-            
-            if (!iconFound) {
-                log.info("Claude icon disappeared - removing Working state and reopening");
+
+            // Remove Working as active state
+            stateMemory.removeInactiveState(workingStateId);
+
+            brobotLogger.log()
+                .observation("Working state removed from active states")
+                .metadata("removedStateId", workingStateId)
+                .metadata("remainingActiveStates", stateMemory.getActiveStates())
+                .log();
+
+            // Immediately navigate back to Working state
+            // This will trigger the PromptToWorkingTransition which types "continue\n"
+            handleInactiveWorkingState();
                 
-                brobotLogger.log()
-                    .observation("Claude icon disappeared - triggering state reset")
-                    .metadata("lastSeenCheck", checkCount - 1)
-                    .metadata("action", "removeInactiveState")
-                    .log();
-                
-                // Remove Working as active state
-                stateMemory.removeInactiveState(workingStateId);
-                
-                brobotLogger.log()
-                    .observation("Working state removed from active states")
-                    .metadata("removedStateId", workingStateId)
-                    .metadata("remainingActiveStates", stateMemory.getActiveStates())
-                    .log();
-                
-                // Immediately navigate back to Working state
-                // This will trigger the PromptToWorkingTransition which types "continue\n"
-                handleInactiveWorkingState();
-                
-            } else {
-                log.debug("Claude icon still visible");
-                
-                if (checkCount % 10 == 0) { // Log every 10th successful check to avoid spam
-                    brobotLogger.log()
-                        .observation("Claude icon still visible")
-                        .metadata("consecutiveChecks", 10)
-                        .metadata("totalChecks", checkCount)
-                        .log();
-                }
-            }
         }
     }
     
