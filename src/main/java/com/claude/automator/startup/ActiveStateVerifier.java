@@ -6,26 +6,26 @@ import io.github.jspinak.brobot.action.Action;
 import io.github.jspinak.brobot.action.ActionResult;
 import io.github.jspinak.brobot.action.ObjectCollection;
 import io.github.jspinak.brobot.action.basic.find.PatternFindOptions;
+import io.github.jspinak.brobot.annotations.StatesRegisteredEvent;
 import io.github.jspinak.brobot.logging.unified.BrobotLogger;
 import io.github.jspinak.brobot.navigation.service.StateService;
 import io.github.jspinak.brobot.statemanagement.StateMemory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.ApplicationArguments;
-import org.springframework.boot.ApplicationRunner;
+import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 /**
  * Verifies which states are actually active at startup by checking for their StateImages.
  * This ensures that states marked as active in StateMemory actually exist on screen.
+ * Runs after states are registered via StatesRegisteredEvent.
  */
 @Component
-@Order(5)  // Run after Brobot initialization
 @RequiredArgsConstructor
 @Slf4j
-public class ActiveStateVerifier implements ApplicationRunner {
+public class ActiveStateVerifier {
     
     private final StateMemory stateMemory;
     private final StateService stateService;
@@ -36,14 +36,18 @@ public class ActiveStateVerifier implements ApplicationRunner {
     @Autowired
     private BrobotLogger brobotLogger;
     
-    @Override
-    public void run(ApplicationArguments args) throws Exception {
-        log.info("Verifying active states at startup...");
+    @EventListener(StatesRegisteredEvent.class)
+    @Order(10)  // Run after states are registered
+    public void onStatesRegistered(StatesRegisteredEvent event) {
+        log.info("States registered - verifying active states... (states: {}, transitions: {})", 
+                event.getStateCount(), event.getTransitionCount());
         
-        try (var operation = brobotLogger.operation("ActiveStateVerification")) {
+        try {
+            try (var operation = brobotLogger.operation("ActiveStateVerification")) {
             brobotLogger.log()
                 .observation("Starting active state verification")
-                .metadata("executionOrder", 5)
+                .metadata("registeredStates", event.getStateCount())
+                .metadata("registeredTransitions", event.getTransitionCount())
                 .metadata("verifyingStates", 2)
                 .log();
             
@@ -136,6 +140,13 @@ public class ActiveStateVerifier implements ApplicationRunner {
                 .metadata("promptStateActive", promptStateActive)
                 .metadata("totalActiveStates", stateMemory.getActiveStates().size())
                 .metadata("activeStateNames", stateMemory.getActiveStateNames())
+                .log();
+            }
+        } catch (Exception e) {
+            log.error("Error during active state verification", e);
+            brobotLogger.log()
+                .error(e)
+                .message("Error during active state verification")
                 .log();
         }
     }
