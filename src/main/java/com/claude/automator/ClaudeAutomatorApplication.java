@@ -79,6 +79,8 @@ public class ClaudeAutomatorApplication {
     private static void configureHeadlessMode() {
         String os = System.getProperty("os.name", "").toLowerCase();
         boolean isWindows = os.contains("windows");
+        boolean isMac = os.contains("mac");
+        boolean isLinux = os.contains("linux");
         boolean isWSL = System.getenv("WSL_DISTRO_NAME") != null || 
                        System.getenv("WSL_INTEROP") != null;
         
@@ -86,24 +88,92 @@ public class ClaudeAutomatorApplication {
         String profile = System.getProperty("spring.profiles.active");
         boolean hasWindowsProfile = profile != null && profile.contains("windows");
         boolean hasLinuxProfile = profile != null && profile.contains("linux");
+        boolean hasHeadlessProfile = profile != null && profile.contains("headless");
         
-        if (hasWindowsProfile) {
-            // Explicitly using Windows profile - disable headless
-            System.setProperty("java.awt.headless", "false");
-            log.info("Windows profile detected - Setting java.awt.headless=false");
-        } else if (hasLinuxProfile || isWSL || !isWindows) {
-            // Linux/WSL environment - enable headless
+        // Check if DISPLAY variable is set (important for Linux)
+        String display = System.getenv("DISPLAY");
+        boolean hasDisplayEnv = display != null && !display.isEmpty();
+        
+        // Check if we can actually use the display
+        boolean canUseDisplay = checkDisplayCapability();
+        
+        // Decision logic
+        if (hasHeadlessProfile) {
+            // Explicit headless profile always wins
             System.setProperty("java.awt.headless", "true");
-            log.info("Linux/WSL environment detected - Setting java.awt.headless=true");
-        } else if (isWindows) {
-            // Windows environment without explicit profile - disable headless
+            log.info("Headless profile detected - Setting java.awt.headless=true");
+        } else if (hasWindowsProfile || (isWindows && !isWSL)) {
+            // Windows (non-WSL) typically has display
             System.setProperty("java.awt.headless", "false");
             log.info("Windows environment detected - Setting java.awt.headless=false");
+        } else if (isWSL) {
+            // WSL usually needs headless unless WSLg is properly configured
+            if (canUseDisplay && hasDisplayEnv) {
+                System.setProperty("java.awt.headless", "false");
+                log.info("WSL with display access (WSLg) - Setting java.awt.headless=false");
+            } else {
+                System.setProperty("java.awt.headless", "true");
+                log.info("WSL without display access - Setting java.awt.headless=true");
+            }
+        } else if (isMac || isLinux) {
+            // Mac and Linux - check actual display capability
+            if (canUseDisplay) {
+                System.setProperty("java.awt.headless", "false");
+                log.info("{} with display access - Setting java.awt.headless=false", 
+                        isMac ? "macOS" : "Linux");
+            } else {
+                System.setProperty("java.awt.headless", "true");
+                String message = isMac 
+                    ? "macOS without display access - Setting java.awt.headless=true (grant Screen Recording permission)"
+                    : "Linux without display access - Setting java.awt.headless=true (check DISPLAY variable or X11/Wayland)";
+                log.info(message);
+            }
+        } else {
+            // Unknown system - be conservative and check display
+            if (canUseDisplay) {
+                System.setProperty("java.awt.headless", "false");
+                log.info("Unknown OS with display access - Setting java.awt.headless=false");
+            } else {
+                System.setProperty("java.awt.headless", "true");
+                log.info("Unknown OS without display access - Setting java.awt.headless=true");
+            }
         }
         
         // Log the final decision
-        log.info("Headless mode configuration: os.name={}, WSL={}, profile={}, java.awt.headless={}",
-                os, isWSL, profile, System.getProperty("java.awt.headless"));
+        log.info("Headless mode configuration: os.name={}, WSL={}, DISPLAY={}, profile={}, canUseDisplay={}, java.awt.headless={}",
+                os, isWSL, display, profile, canUseDisplay, System.getProperty("java.awt.headless"));
+    }
+    
+    /**
+     * Check if we can actually use the display (especially important for macOS).
+     * This attempts to create a Robot instance which will fail if we don't have
+     * the necessary permissions.
+     */
+    private static boolean checkDisplayCapability() {
+        try {
+            // First check if AWT thinks we're headless
+            if (java.awt.GraphicsEnvironment.isHeadless()) {
+                return false;
+            }
+            
+            // Try to create a Robot - this will fail on macOS without permissions
+            java.awt.Robot robot = new java.awt.Robot();
+            
+            // Try to capture a small region - this specifically tests screen recording permission
+            robot.createScreenCapture(new java.awt.Rectangle(1, 1));
+            
+            log.info("Display capability check: SUCCESS - Screen access is available");
+            return true;
+        } catch (java.awt.AWTException e) {
+            log.warn("Display capability check: FAILED - AWTException: {}", e.getMessage());
+            return false;
+        } catch (SecurityException e) {
+            log.warn("Display capability check: FAILED - SecurityException (likely missing permissions): {}", e.getMessage());
+            return false;
+        } catch (Exception e) {
+            log.warn("Display capability check: FAILED - {}: {}", e.getClass().getSimpleName(), e.getMessage());
+            return false;
+        }
     }
     
     private static void runStartupDiagnostics(ConfigurableApplicationContext context) {
