@@ -23,6 +23,11 @@ brobot:
     startup-delay: 2
   sikuli:
     highlight: true
+  monitor:
+    # Use primary monitor by default (-1 = primary)
+    default-screen-index: -1
+    multi-monitor-enabled: true
+    log-monitor-info: true
   # New unified logging configuration
   logging:
     console:
