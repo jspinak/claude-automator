@@ -39,8 +39,32 @@ brobot:
     default-screen-index: -1
     multi-monitor-enabled: true
     log-monitor-info: true
-  # New unified logging configuration
+  # Console action reporting - shows detailed action results
+  console:
+    actions:
+      enabled: true
+      level: VERBOSE  # QUIET, NORMAL, or VERBOSE
+      # VERBOSE shows: match coordinates, similarity scores, timing details
+      # NORMAL shows: success/failure and target name only
+      # QUIET shows: no action output
+      show-match-details: true
+      show-timing: true
+  # Combined logging configuration
   logging:
+    # Action logging verbosity
+    verbosity: VERBOSE  # NORMAL or VERBOSE
+    # VERBOSE includes: search regions, performance metrics, stack traces
+    # NORMAL includes: basic operation results only
+    verbose:
+      show-search-regions: true
+      show-match-scores: true
+      show-performance-breakdown: true
+      show-stack-traces: true
+    normal:
+      show-timing: false
+      show-match-coordinates: false
+      show-match-count: true
+    # Unified logging configuration
     console:
       level: HIGH           # Show all logs in console
       colors: true          # Enable ANSI colors
@@ -67,8 +91,4 @@ claude:
     monitoring:
       check-interval: 2     # seconds between icon checks
       initial-delay: 5      # seconds before first check
-      log-frequency: 10     # log "still visible" every N checks
-    debug:
-      extensive-logging: true  # Enable all debug logging
-      log-screenshots: true    # Log screenshot paths on errors
-      log-performance: true    # Log all performance metrics
+      icon-timeout: 5       # seconds to wait for icon
