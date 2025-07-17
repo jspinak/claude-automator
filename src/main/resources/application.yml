@@ -18,8 +18,19 @@ brobot:
     image-path: images
     mock: false
   startup:
+    # Enable automatic startup verification
+    auto-verify: true
+    verify-states: "Working,Prompt"  # States to verify
+    image-path: images
+    fallback-paths:
+      - "/home/jspinak/brobot-parent-directory/claude-automator/images"
+    clear-states-before-verify: true
+    ui-stabilization-delay: 2.0
+    throw-on-failure: false
+    run-diagnostics-on-failure: true
+    # Legacy settings
     verify-initial-states: false
-    initial-states: ""  # Let ActiveStateVerifier handle this
+    initial-states: ""
     startup-delay: 2
   sikuli:
     highlight: true
