@@ -19,10 +19,13 @@
     <logger name="io.github.jspinak.brobot.logging" level="ERROR"/>
     <logger name="com.claude.automator.automation" level="INFO"/>
     <logger name="org.springframework" level="WARN"/>
-    <logger name="org.sikuli" level="ERROR"/>
     
     <!-- Disable verbose brobot internal logging -->
     <logger name="io.github.jspinak.brobot.tools.logging" level="ERROR"/>
     <logger name="io.github.jspinak.brobot.navigation" level="ERROR"/>
     <logger name="io.github.jspinak.brobot.statemanagement" level="ERROR"/>
+    
+    <!-- Disable SikuliX logs completely -->
+    <logger name="org.sikuli" level="OFF"/>
+    <logger name="com.sikulix" level="OFF"/>
 </configuration>
