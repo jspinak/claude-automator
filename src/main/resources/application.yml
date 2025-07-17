@@ -7,9 +7,15 @@ spring:
 logging:
   level:
     root: INFO
-    com.claude.automator: DEBUG
+    com.claude.automator: INFO
     io.github.jspinak.brobot: INFO
-    io.github.jspinak.brobot.logging.unified: DEBUG  # Enable debug for unified logging
+    io.github.jspinak.brobot.logging.unified: WARN  # Reduce unified logging verbosity
+    io.github.jspinak.brobot.statemanagement: WARN
+    io.github.jspinak.brobot.lifecycle: WARN
+    io.github.jspinak.brobot.action.basic.find: WARN
+    io.github.jspinak.brobot.startup: INFO  # Keep startup at INFO
+  pattern:
+    console: "%d{HH:mm:ss} %-5level %msg%n"  # Cleaner timestamp format
 
 # Brobot Configuration (v1.1.0+)
 # Only override values that differ from defaults in brobot-defaults.properties
@@ -43,32 +49,34 @@ brobot:
   console:
     actions:
       enabled: true
-      level: VERBOSE  # QUIET, NORMAL, or VERBOSE
+      level: NORMAL  # QUIET, NORMAL, or VERBOSE
       # VERBOSE shows: match coordinates, similarity scores, timing details
       # NORMAL shows: success/failure and target name only
       # QUIET shows: no action output
-      show-match-details: true
-      show-timing: true
+      show-match-details: false
+      show-timing: false
+      use-symbols: true  # Use ▶, ✓, ✗ symbols
   # Combined logging configuration
   logging:
     # Action logging verbosity
-    verbosity: VERBOSE  # NORMAL or VERBOSE
+    verbosity: NORMAL  # NORMAL or VERBOSE
     # VERBOSE includes: search regions, performance metrics, stack traces
     # NORMAL includes: basic operation results only
     verbose:
-      show-search-regions: true
-      show-match-scores: true
-      show-performance-breakdown: true
-      show-stack-traces: true
+      show-search-regions: false
+      show-match-scores: false
+      show-performance-breakdown: false
+      show-stack-traces: false
     normal:
       show-timing: false
       show-match-coordinates: false
-      show-match-count: true
+      show-match-count: false
     # Unified logging configuration
     console:
-      level: HIGH           # Show all logs in console
+      level: NORMAL        # Reduce duplicate logging
       colors: true          # Enable ANSI colors
-      format: compact       # Use compact format
+      format: compact      # Use compact format
+      duplicate-to-slf4j: false  # Prevent duplicate [INFO] lines
     structured:
       enabled: true         # Enable structured logging
       format: json          # Log in JSON format
