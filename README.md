@@ -27,7 +27,8 @@ claude-automator/
 │   │   │   ├── PromptTransitions.java        # Transitions for Prompt state
 │   │   │   └── WorkingTransitions.java       # Transitions for Working state
 │   │   ├── automation/
-│   │   │   └── ClaudeMonitoringAutomation.java # Main automation logic
+│   │   │   ├── ClaudeMonitoringAutomation.java   # Basic automation logic
+│   │   │   └── ClaudeMonitoringAutomationV2.java # Enhanced with StateAwareScheduler
 │   │   └── config/
 │   │       └── StateConfiguration.java        # Spring configuration
 │   └── resources/
@@ -83,6 +84,36 @@ new JavaStateTransition.Builder()
 - Dependency injection throughout
 - Configuration management
 - Lifecycle management with @PostConstruct
+
+### 5. StateAwareScheduler (Brobot Library Feature)
+
+The V2 automation demonstrates the use of `StateAwareScheduler` from the Brobot library:
+
+```java
+// Configure state checking behavior
+StateCheckConfiguration stateConfig = new StateCheckConfiguration.Builder()
+    .withRequiredStates(List.of("Prompt", "Working"))
+    .withCheckMode(CheckMode.CHECK_ONLY_INACTIVE) // or CHECK_ALL
+    .withRebuildOnMismatch(true)
+    .withSkipIfStatesMissing(false)
+    .build();
+
+// Schedule task with automatic state validation
+stateAwareScheduler.scheduleWithStateCheck(
+    scheduler,
+    this::monitoringTask,
+    stateConfig,
+    initialDelay,
+    checkInterval,
+    TimeUnit.SECONDS
+);
+```
+
+Benefits:
+- Ensures required states are active before task execution
+- Can check all states or only inactive ones
+- Optional state rebuild on mismatch
+- Configurable behavior when states are missing
 
 ## Automation Flow
 
