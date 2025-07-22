@@ -6,6 +6,7 @@ import org.springframework.context.event.EventListener;
 import io.github.jspinak.brobot.annotations.StatesRegisteredEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
@@ -14,6 +15,7 @@ import java.util.Collection;
  * Test component to verify annotation processing is working correctly.
  */
 @Component
+@ConditionalOnProperty(name = "test.annotation-processing", havingValue = "true")
 @RequiredArgsConstructor
 @Slf4j
 public class AnnotationProcessingTest {

@@ -10,6 +10,7 @@ import io.github.jspinak.brobot.model.element.Region;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -18,6 +19,7 @@ import java.util.Collections;
  * Direct test to find and highlight Claude UI elements without state navigation.
  */
 @Component
+@ConditionalOnProperty(name = "test.direct-find", havingValue = "true")
 @RequiredArgsConstructor
 @Slf4j
 public class DirectFindTest implements CommandLineRunner {

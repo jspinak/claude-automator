@@ -4,12 +4,14 @@ import org.sikuli.script.Screen;
 import org.sikuli.script.Region;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
  * Direct test using SikuliX highlighting to bypass framework layers.
  */
 @Component
+@ConditionalOnProperty(name = "test.direct-highlight", havingValue = "true")
 @Slf4j
 public class DirectHighlightTest implements CommandLineRunner {
     

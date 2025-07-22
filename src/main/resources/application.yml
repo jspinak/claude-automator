@@ -14,6 +14,8 @@ logging:
     io.github.jspinak.brobot.lifecycle: WARN
     io.github.jspinak.brobot.action.basic.find: WARN
     io.github.jspinak.brobot.startup: INFO  # Keep startup at INFO
+    io.github.jspinak.brobot.aspects.display: DEBUG  # Debug visual feedback
+    io.github.jspinak.brobot.tools.logging.visual: DEBUG  # Debug highlight manager
   pattern:
     console: "%d{HH:mm:ss} %-5level %msg%n"  # Cleaner timestamp format
 

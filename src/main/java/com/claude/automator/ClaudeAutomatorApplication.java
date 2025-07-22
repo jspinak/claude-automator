@@ -1,15 +1,16 @@
 package com.claude.automator;
 
-import com.claude.automator.util.ImageLoadingDiagnostics;
 import io.github.jspinak.brobot.logging.unified.BrobotLogger;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
 @Slf4j
 @SpringBootApplication
+@EnableAspectJAutoProxy
 @ComponentScan(basePackages = {"com.claude.automator", "io.github.jspinak.brobot"})
 public class ClaudeAutomatorApplication {
 
@@ -182,15 +183,18 @@ public class ClaudeAutomatorApplication {
             // Wait a moment for everything to initialize
             Thread.sleep(1000);
             
-            // Run image loading diagnostics
-            ImageLoadingDiagnostics.runDiagnostics();
+            // The ImageLoadingDiagnosticsRunner runs automatically if enabled via property
+            // brobot.diagnostics.image-loading.enabled=true
             
-            // Log the diagnostic report with BrobotLogger
+            // Log diagnostic status with BrobotLogger
             if (brobotLogger != null) {
-                String report = ImageLoadingDiagnostics.getDiagnosticReport();
+                boolean diagnosticsEnabled = context.getEnvironment()
+                    .getProperty("brobot.diagnostics.image-loading.enabled", Boolean.class, false);
+                
                 brobotLogger.log()
-                    .observation("Startup diagnostics completed")
-                    .metadata("diagnosticReport", report)
+                    .observation("Startup diagnostics status")
+                    .metadata("imageLoadingDiagnosticsEnabled", diagnosticsEnabled)
+                    .metadata("hint", "Set brobot.diagnostics.image-loading.enabled=true to enable image loading diagnostics")
                     .log();
             }
         } catch (Exception e) {
