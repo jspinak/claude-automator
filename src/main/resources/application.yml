@@ -25,6 +25,13 @@ brobot:
   core:
     image-path: images
     mock: false
+  screenshot:
+    save-history: true
+  force:
+    headless: false
+  allow:
+    screen:
+      capture: true
   startup:
     # Enable automatic startup verification
     auto-verify: true
