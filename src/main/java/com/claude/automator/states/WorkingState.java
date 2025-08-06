@@ -1,7 +1,11 @@
 package com.claude.automator.states;
 
 import io.github.jspinak.brobot.annotations.State;
+import io.github.jspinak.brobot.action.basic.find.MatchAdjustmentOptions;
+import io.github.jspinak.brobot.model.element.Region;
+import io.github.jspinak.brobot.model.element.SearchRegionOnObject;
 import io.github.jspinak.brobot.model.state.StateImage;
+import io.github.jspinak.brobot.model.state.StateObject;
 import lombok.Getter;
 
 /**
@@ -22,15 +26,15 @@ public class WorkingState {
                         "working/claude-icon-3", 
                         "working/claude-icon-4")
             .setName("ClaudeIcon")
-            .setSearchRegionOnObject(io.github.jspinak.brobot.model.element.SearchRegionOnObject.builder()
-                    .targetType(io.github.jspinak.brobot.model.state.StateObject.Type.IMAGE)
+            .setSearchRegionOnObject(SearchRegionOnObject.builder()
+                    .targetType(StateObject.Type.IMAGE)
                     .targetStateName("Prompt")
                     .targetObjectName("ClaudePrompt")
-                    .adjustments(io.github.jspinak.brobot.model.element.SearchRegionOnObject.AdjustOptions.builder()
-                            .xAdjust(3)
-                            .yAdjust(10)
-                            .wAdjust(30)
-                            .hAdjust(55)
+                    .adjustments(MatchAdjustmentOptions.builder()
+                            .addX(3)
+                            .addY(10)
+                            .addW(30)
+                            .addH(55)
                             .build())
                     .build())
             .build();

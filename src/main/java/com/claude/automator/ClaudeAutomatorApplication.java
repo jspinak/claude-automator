@@ -19,6 +19,9 @@ public class ClaudeAutomatorApplication {
         // Additional SikuliX properties for macOS
         System.setProperty("apple.awt.UIElement", "false");
         
+        // Set default similarity threshold for SikuliX
+        org.sikuli.basics.Settings.MinSimilarity = 0.85;
+        
         SpringApplication.run(ClaudeAutomatorApplication.class, args);
     }
 }
