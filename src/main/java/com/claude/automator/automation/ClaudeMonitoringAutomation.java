@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -39,6 +40,7 @@ public class ClaudeMonitoringAutomation {
     private final WorkingState workingState;
     
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    private ScheduledFuture<?> scheduledTask;
     
     @Value("${claude.automator.monitoring.initial-delay:5}")
     private int initialDelay;
@@ -51,6 +53,9 @@ public class ClaudeMonitoringAutomation {
     
     @Value("${claude.automator.monitoring.required-states:Prompt,Working}")
     private List<String> requiredStates;
+    
+    @Value("${claude.automator.monitoring.max-iterations:5}")
+    private int maxIterations;
 
     @PostConstruct
     public void startMonitoring() {
@@ -58,15 +63,18 @@ public class ClaudeMonitoringAutomation {
         log.info("WorkingState ClaudeIcon search region config: {}", 
                 workingState.getClaudeIcon().getSearchRegionOnObject());
         
+        log.info("Starting monitoring with max iterations: {}", maxIterations);
+        
         // Configure state checking - ensures Prompt and Working states exist
         StateCheckConfiguration stateConfig = new StateCheckConfiguration.Builder()
                 .withRequiredStates(requiredStates)
                 .withRebuildOnMismatch(true)
                 .withSkipIfStatesMissing(false)
+                .withMaxIterations(maxIterations)
                 .build();
         
-        // Schedule monitoring with automatic state verification
-        stateAwareScheduler.scheduleWithStateCheck(
+        // Schedule monitoring with automatic state verification and iteration limit
+        scheduledTask = stateAwareScheduler.scheduleWithStateCheck(
                 scheduler,
                 this::monitorClaudeStates,
                 stateConfig,
@@ -74,6 +82,20 @@ public class ClaudeMonitoringAutomation {
                 checkInterval,
                 TimeUnit.SECONDS
         );
+        
+        // Add shutdown hook to stop when iterations complete
+        scheduler.execute(() -> {
+            try {
+                scheduledTask.get(); // Wait for completion
+                log.info("Monitoring completed after {} iterations", maxIterations);
+                stopMonitoring();
+            } catch (Exception e) {
+                if (e.getMessage() != null && e.getMessage().contains("Max iterations reached")) {
+                    log.info("Monitoring stopped after reaching max iterations");
+                    stopMonitoring();
+                }
+            }
+        });
     }
 
     /**
