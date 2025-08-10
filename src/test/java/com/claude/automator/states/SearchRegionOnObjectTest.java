@@ -1,5 +1,6 @@
 package com.claude.automator.states;
 
+import io.github.jspinak.brobot.action.basic.find.MatchAdjustmentOptions;
 import io.github.jspinak.brobot.model.element.SearchRegionOnObject;
 import io.github.jspinak.brobot.model.state.StateObject;
 import org.junit.jupiter.api.Test;
@@ -11,18 +12,18 @@ public class SearchRegionOnObjectTest {
     
     @Test
     public void testSearchRegionOnObjectBuilder() {
-        SearchRegionOnObject.AdjustOptions adjustOptions = SearchRegionOnObject.AdjustOptions.builder()
-                .xAdjust(3)
-                .yAdjust(10)
-                .wAdjust(30)
-                .hAdjust(55)
+        MatchAdjustmentOptions adjustOptions = MatchAdjustmentOptions.builder()
+                .addX(3)
+                .addY(10)
+                .addW(30)
+                .addH(55)
                 .build();
         
         assertNotNull(adjustOptions);
-        assertEquals(3, adjustOptions.getXAdjust());
-        assertEquals(10, adjustOptions.getYAdjust());
-        assertEquals(30, adjustOptions.getWAdjust());
-        assertEquals(55, adjustOptions.getHAdjust());
+        assertEquals(3, adjustOptions.getAddX());
+        assertEquals(10, adjustOptions.getAddY());
+        assertEquals(30, adjustOptions.getAddW());
+        assertEquals(55, adjustOptions.getAddH());
         
         SearchRegionOnObject searchRegion = SearchRegionOnObject.builder()
                 .targetType(StateObject.Type.IMAGE)

@@ -4,6 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
 
 @SpringBootApplication
 @EnableAspectJAutoProxy
@@ -19,9 +23,21 @@ public class ClaudeAutomatorApplication {
         // Additional SikuliX properties for macOS
         System.setProperty("apple.awt.UIElement", "false");
         
-        // Set default similarity threshold for SikuliX
-        org.sikuli.basics.Settings.MinSimilarity = 0.85;
+        // Don't set MinSimilarity here - let it be configured from properties
         
         SpringApplication.run(ClaudeAutomatorApplication.class, args);
+    }
+    
+    @Component
+    public static class SimilarityConfigurer {
+        
+        @Value("${brobot.action.similarity:0.70}")
+        private double similarity;
+        
+        @EventListener(ApplicationReadyEvent.class)
+        public void configureSimilarity() {
+            org.sikuli.basics.Settings.MinSimilarity = similarity;
+            System.out.println("Configured SikuliX MinSimilarity to: " + similarity);
+        }
     }
 }

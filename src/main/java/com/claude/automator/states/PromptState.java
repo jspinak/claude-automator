@@ -17,12 +17,23 @@ public class PromptState {
     private final StateString continueCommand;
     
     public PromptState() {
+        // Create search region for lower left quarter of screen
+        // This adapts to any screen resolution
+        Region lowerLeftQuarter = Region.builder()
+            .withScreenPercentage(0.0, 0.5, 0.5, 0.5)  // x=0%, y=50%, width=50%, height=50%
+            .build();
+        
         // Initialize the claude prompt image
-        claudePrompt = new StateImage.Builder()
+        // Build first, then set fixed search region to ensure all patterns share the same region
+        // This prevents multiple overlapping highlights
+        StateImage tempImage = new StateImage.Builder()
             .addPatterns("prompt/claude-prompt-1","prompt/claude-prompt-2","prompt/claude-prompt-3")
             .setName("ClaudePrompt")
-            .setSearchRegionForAllPatterns(new Region(10, 400, 700, 350))
             .build();
+        
+        // Set fixed search region after building to avoid duplicate regions
+        tempImage.setFixedSearchRegion(lowerLeftQuarter);
+        claudePrompt = tempImage;
         
         // Create the continue command as a string
         continueCommand = new StateString.Builder()

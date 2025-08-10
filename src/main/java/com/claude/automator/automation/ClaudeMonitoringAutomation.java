@@ -83,14 +83,12 @@ public class ClaudeMonitoringAutomation {
      * - If icon disappears: remove Working state to restart cycle
      */
     private void monitorClaudeStates() {
-        var activeStates = stateMemory.getActiveStates();
-        Long promptStateId = stateService.getStateId("Prompt");
-        Long workingStateId = stateService.getStateId("Working");
+        var activeStates = stateMemory.getActiveStateNames();
         
-        if (activeStates.contains(workingStateId)) {
+        if (activeStates.contains("Working")) {
             // Working state is active - check if icon still visible
-            checkWorkingIcon(workingStateId);
-        } else if (activeStates.contains(promptStateId)) {
+            checkWorkingIcon();
+        } else if (activeStates.contains("Prompt")) {
             // Only Prompt is active - navigate to Working (triggers transition)
             log.debug("Prompt state active, attempting to navigate to Working state");
             boolean success = stateNavigator.openState("Working");
@@ -103,7 +101,7 @@ public class ClaudeMonitoringAutomation {
      * Checks if Claude icon is still visible in Working state.
      * If not found, removes Working state to return to Prompt state only.
      */
-    private void checkWorkingIcon(Long workingStateId) {
+    private void checkWorkingIcon() {
         // Log search region info
         var searchRegions = workingState.getClaudeIcon().getPatterns().stream()
                 .map(p -> p.getSearchRegions().getFixedRegion())
@@ -124,7 +122,7 @@ public class ClaudeMonitoringAutomation {
             log.debug("Claude icon not found, removing Working state");
             // Icon not found - remove Working state
             // This leaves only Prompt state active, allowing transition to trigger next cycle
-            stateMemory.removeInactiveState(workingStateId);
+            stateMemory.removeInactiveState("working");
         }
         // If icon found, do nothing - stay in Working state
     }

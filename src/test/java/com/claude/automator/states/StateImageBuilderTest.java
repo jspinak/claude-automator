@@ -1,5 +1,7 @@
 package com.claude.automator.states;
 
+import io.github.jspinak.brobot.action.basic.find.MatchAdjustmentOptions;
+import io.github.jspinak.brobot.model.element.Pattern;
 import io.github.jspinak.brobot.model.element.SearchRegionOnObject;
 import io.github.jspinak.brobot.model.state.StateImage;
 import io.github.jspinak.brobot.model.state.StateObject;
@@ -16,30 +18,29 @@ public class StateImageBuilderTest {
                 .targetType(StateObject.Type.IMAGE)
                 .targetStateName("Prompt")
                 .targetObjectName("ClaudePrompt")
-                .adjustments(SearchRegionOnObject.AdjustOptions.builder()
-                        .xAdjust(3)
-                        .yAdjust(10)
-                        .wAdjust(30)
-                        .hAdjust(55)
+                .adjustments(MatchAdjustmentOptions.builder()
+                        .addX(3)
+                        .addY(10)
+                        .addW(30)
+                        .addH(55)
                         .build())
                 .build();
         
         assertNotNull(searchRegion);
         
         // Now test with StateImage.Builder
-        try {
-            StateImage stateImage = new StateImage.Builder()
-                    .addPatterns("test-pattern")
-                    .setName("TestImage")
-                    .setSearchRegionOnObject(searchRegion)
-                    .build();
-            
-            assertNotNull(stateImage);
-            assertNotNull(stateImage.getSearchRegionOnObject());
-            assertEquals("TestImage", stateImage.getName());
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
-        }
+        // Create a Pattern object directly without loading an image file
+        Pattern testPattern = new Pattern();
+        
+        StateImage stateImage = new StateImage.Builder()
+                .addPattern(testPattern)
+                .setName("TestImage")
+                .setSearchRegionOnObject(searchRegion)
+                .build();
+        
+        assertNotNull(stateImage);
+        assertNotNull(stateImage.getSearchRegionOnObject());
+        assertEquals("TestImage", stateImage.getName());
+        assertEquals(searchRegion, stateImage.getSearchRegionOnObject());
     }
 }
