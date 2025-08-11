@@ -51,6 +51,7 @@ public class ClaudeMonitoringAutomation {
     @Value("${claude.automator.monitoring.icon-timeout:5}")
     private int iconTimeout;
     
+    // Use LinkedHashSet to maintain order from properties while ensuring uniqueness
     @Value("${claude.automator.monitoring.required-states:Prompt,Working}")
     private List<String> requiredStates;
     
