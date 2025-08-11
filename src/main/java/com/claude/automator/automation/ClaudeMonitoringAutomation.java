@@ -14,9 +14,9 @@ import com.claude.automator.states.WorkingState;
 import io.github.jspinak.brobot.util.image.debug.CaptureDebugger;
 import io.github.jspinak.brobot.model.element.Location;
 import io.github.jspinak.brobot.model.element.Region;
-import io.github.jspinak.brobot.model.element.Position;
-import io.github.jspinak.brobot.model.element.Positions;
-import org.sikuli.script.Screen;
+
+import java.awt.Dimension;
+import java.awt.Toolkit;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -100,19 +100,13 @@ public class ClaudeMonitoringAutomation {
                 TimeUnit.SECONDS
         );
         
-        // Add shutdown hook to stop when iterations complete
-        scheduler.execute(() -> {
-            try {
-                scheduledTask.get(); // Wait for completion
-                log.info("Monitoring completed after {} iterations", maxIterations);
-                stopMonitoring();
-            } catch (Exception e) {
-                if (e.getMessage() != null && e.getMessage().contains("Max iterations reached")) {
-                    log.info("Monitoring stopped after reaching max iterations");
-                    stopMonitoring();
-                }
-            }
-        });
+        // Schedule a separate task to stop monitoring after max iterations time
+        // This ensures stopMonitoring is called even if the scheduler doesn't complete normally
+        long totalDuration = initialDelay + (checkInterval * maxIterations);
+        scheduler.schedule(() -> {
+            log.info("Monitoring duration reached ({} seconds), stopping", totalDuration);
+            stopMonitoring();
+        }, totalDuration + 2, TimeUnit.SECONDS); // Add 2 seconds buffer
     }
 
     /**
@@ -191,29 +185,40 @@ public class ClaudeMonitoringAutomation {
     }
     
     /**
-     * Moves the mouse to the center of the primary screen using Region and Position.
+     * Moves the mouse to the center of the primary screen.
      */
     private void moveMouseToCenter() {
-        // Use Position.MIDDLEMIDDLE to represent the center
-        Position centerPosition = new Position(Positions.Name.MIDDLEMIDDLE);
-        
-        // Create a Location from the Region and Position
-        Location centerLocation = new Location(new Region(), centerPosition);
-        
-        // Create move options with descriptive logging through ActionConfig methods
-        MouseMoveOptions moveOptions = new MouseMoveOptions.Builder()
-                .setMoveMouseDelay(0.5f) // Smooth movement
-                .withBeforeActionLog("Moving mouse to center of screen")
-                .withSuccessLog("Successfully moved mouse to center of screen")
-                .withFailureLog("Failed to move mouse to center of screen")
-                .build();
-        
-        // Create object collection with the center location
-        ObjectCollection objectCollection = new ObjectCollection.Builder()
-                .withLocations(centerLocation)
-                .build();
-        
-        // Perform the move action - logging will be handled automatically
-        action.perform(moveOptions, objectCollection);
+        try {
+            // Get screen dimensions
+            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+            int centerX = screenSize.width / 2;
+            int centerY = screenSize.height / 2;
+            
+            log.info("Moving mouse to center of screen: ({}, {})", centerX, centerY);
+            
+            // Create a Location at the center
+            Location centerLocation = new Location(centerX, centerY);
+            
+            // Create move options
+            MouseMoveOptions moveOptions = new MouseMoveOptions.Builder()
+                    .setMoveMouseDelay(0.5f) // Smooth movement
+                    .build();
+            
+            // Create object collection with the center location
+            ObjectCollection objectCollection = new ObjectCollection.Builder()
+                    .withLocations(centerLocation)
+                    .build();
+            
+            // Perform the move action
+            ActionResult moveResult = action.perform(moveOptions, objectCollection);
+            
+            if (moveResult.isSuccess()) {
+                log.info("Successfully moved mouse to center of screen");
+            } else {
+                log.warn("Failed to move mouse to center of screen");
+            }
+        } catch (Exception e) {
+            log.error("Error moving mouse to center of screen", e);
+        }
     }
 }
