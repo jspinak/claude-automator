@@ -8,11 +8,20 @@ import io.github.jspinak.brobot.statemanagement.StateMemory;
 import io.github.jspinak.brobot.action.Action;
 import io.github.jspinak.brobot.action.ActionResult;
 import io.github.jspinak.brobot.action.basic.find.PatternFindOptions;
+import io.github.jspinak.brobot.action.basic.mouse.MouseMoveOptions;
+import io.github.jspinak.brobot.action.ObjectCollection;
 import com.claude.automator.states.WorkingState;
+import io.github.jspinak.brobot.util.image.debug.CaptureDebugger;
+import io.github.jspinak.brobot.model.element.Location;
+import io.github.jspinak.brobot.model.element.Region;
+import io.github.jspinak.brobot.model.element.Position;
+import io.github.jspinak.brobot.model.element.Positions;
+import org.sikuli.script.Screen;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,6 +48,10 @@ public class ClaudeMonitoringAutomation {
     private final Action action;
     private final WorkingState workingState;
     
+    // Optional debugger - not required for normal operation
+    @Autowired(required = false)
+    private CaptureDebugger captureDebugger;
+    
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private ScheduledFuture<?> scheduledTask;
     
@@ -57,6 +70,9 @@ public class ClaudeMonitoringAutomation {
     
     @Value("${claude.automator.monitoring.max-iterations:5}")
     private int maxIterations;
+    
+    @Value("${claude.automator.monitoring.debug-capture:false}")
+    private boolean debugCaptureEnabled;
 
     @PostConstruct
     public void startMonitoring() {
@@ -143,6 +159,14 @@ public class ClaudeMonitoringAutomation {
             log.debug("Claude icon found with {} matches", result.getMatchList().size());
         } else {
             log.debug("Claude icon not found, removing Working state");
+            
+            // Run debug capture if enabled and debugger is available
+            if (debugCaptureEnabled && captureDebugger != null) {
+                log.info("Running capture debug to diagnose pattern matching issue");
+                Region searchRegion = searchRegions.orElse(new Region(0, 0, 1920, 1080));
+                String patternPath = "images/claude-icon.png";
+                captureDebugger.debugCapture(searchRegion, patternPath);
+            }
             // Icon not found - remove Working state
             // This leaves only Prompt state active, allowing transition to trigger next cycle
             stateMemory.removeInactiveState("working");
@@ -151,6 +175,9 @@ public class ClaudeMonitoringAutomation {
     }
     
     public void stopMonitoring() {
+        // Move mouse to center of screen when monitoring completes
+        moveMouseToCenter();
+        
         scheduler.shutdown();
         
         try {
@@ -161,5 +188,32 @@ public class ClaudeMonitoringAutomation {
             scheduler.shutdownNow();
             Thread.currentThread().interrupt();
         }
+    }
+    
+    /**
+     * Moves the mouse to the center of the primary screen using Region and Position.
+     */
+    private void moveMouseToCenter() {
+        // Use Position.MIDDLEMIDDLE to represent the center
+        Position centerPosition = new Position(Positions.Name.MIDDLEMIDDLE);
+        
+        // Create a Location from the Region and Position
+        Location centerLocation = new Location(new Region(), centerPosition);
+        
+        // Create move options with descriptive logging through ActionConfig methods
+        MouseMoveOptions moveOptions = new MouseMoveOptions.Builder()
+                .setMoveMouseDelay(0.5f) // Smooth movement
+                .withBeforeActionLog("Moving mouse to center of screen")
+                .withSuccessLog("Successfully moved mouse to center of screen")
+                .withFailureLog("Failed to move mouse to center of screen")
+                .build();
+        
+        // Create object collection with the center location
+        ObjectCollection objectCollection = new ObjectCollection.Builder()
+                .withLocations(centerLocation)
+                .build();
+        
+        // Perform the move action - logging will be handled automatically
+        action.perform(moveOptions, objectCollection);
     }
 }
