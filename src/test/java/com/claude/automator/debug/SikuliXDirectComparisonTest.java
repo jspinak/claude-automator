@@ -16,6 +16,23 @@ public class SikuliXDirectComparisonTest {
         System.out.println("=== SIKULIX DIRECT PATTERN MATCHING TEST ===\n");
         
         try {
+            // Give user time to switch to the target application
+            System.out.println("!!! SWITCH TO YOUR TARGET APPLICATION NOW !!!");
+            System.out.println("You have 5 seconds to make the target screen visible...");
+            for (int i = 5; i > 0; i--) {
+                System.out.println(i + "...");
+                Thread.sleep(1000);
+            }
+            System.out.println("Starting test...\n");
+            
+            // Set up SikuliX ImagePath
+            org.sikuli.script.ImagePath.reset();
+            org.sikuli.script.ImagePath.setBundlePath("images");
+            org.sikuli.script.ImagePath.add("images");
+            org.sikuli.script.ImagePath.add("images/prompt");
+            org.sikuli.script.ImagePath.add("images/working");
+            System.out.println("Configured ImagePath: " + org.sikuli.script.ImagePath.getPaths());
+            
             // Test with different pattern loading methods
             String[] patternPaths = {
                 "images/prompt/claude-prompt-1.png",
