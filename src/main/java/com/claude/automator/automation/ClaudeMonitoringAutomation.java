@@ -13,6 +13,7 @@ import io.github.jspinak.brobot.action.ConditionalActionChain;
 import io.github.jspinak.brobot.action.ObjectCollection;
 import com.claude.automator.states.WorkingState;
 import com.claude.automator.states.PromptState;
+import com.claude.automator.diagnostics.BrobotScreenCaptureDiagnostic;
 import io.github.jspinak.brobot.util.image.debug.CaptureDebugger;
 import io.github.jspinak.brobot.model.element.Location;
 import io.github.jspinak.brobot.model.element.Positions;
@@ -63,6 +64,10 @@ public class ClaudeMonitoringAutomation {
     // Optional debugger - not required for normal operation
     @Autowired(required = false)
     private CaptureDebugger captureDebugger;
+    
+    // Diagnostic component for screenshot capture
+    @Autowired(required = false)
+    private BrobotScreenCaptureDiagnostic screenCaptureDiagnostic;
 
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private ScheduledFuture<?> scheduledTask;
@@ -110,6 +115,14 @@ public class ClaudeMonitoringAutomation {
                 initialDelay,
                 checkInterval,
                 TimeUnit.SECONDS);
+        
+        // Capture diagnostic screenshot after scheduling is done
+        if (screenCaptureDiagnostic != null) {
+            log.info("Capturing diagnostic screenshot after scheduling...");
+            scheduler.schedule(() -> {
+                screenCaptureDiagnostic.captureDiagnosticScreenshot("after_scheduling");
+            }, initialDelay + 1, TimeUnit.SECONDS); // Capture 1 second after initial delay
+        }
 
         // Schedule a separate task to stop monitoring after max iterations time
         // This ensures stopMonitoring is called even if the scheduler doesn't complete
@@ -295,7 +308,7 @@ public class ClaudeMonitoringAutomation {
 
             log.info("Moving mouse to center of screen using Positions.Name.MIDDLEMIDDLE");
 
-            // Use the Action.perform method with ActionType.MOVE
+            // Use the Action.perform convenience method with ActionType.MOVE
             ActionResult moveResult = action.perform(ActionType.MOVE, centerLocation);
 
             if (moveResult.isSuccess()) {
