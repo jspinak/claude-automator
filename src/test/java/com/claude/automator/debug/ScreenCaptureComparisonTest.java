@@ -2,158 +2,136 @@ package com.claude.automator.debug;
 
 import org.junit.jupiter.api.Test;
 import org.sikuli.script.Screen;
-import org.sikuli.script.Region;
 import org.sikuli.script.ScreenImage;
-import javax.imageio.ImageIO;
+import org.sikuli.script.Region;
+
+import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
 
 /**
- * Test to compare what SikuliX captures vs what it highlights.
- * This will help identify if there's a mismatch between the capture and display coordinate systems.
+ * Test to compare SikuliX Screen.capture() with direct Robot capture
+ * to understand why we're not getting physical pixels.
  */
 public class ScreenCaptureComparisonTest {
     
     @Test
-    public void compareCapatureVsHighlight() throws Exception {
-        System.out.println("\n================================================================================");
-        System.out.println("SCREEN CAPTURE VS HIGHLIGHT COMPARISON");
-        System.out.println("================================================================================\n");
-        
-        Screen screen = new Screen();
-        
-        // Test 1: Capture specific regions and see what we get
-        System.out.println("--- Test 1: Capturing Specific Regions ---");
-        
-        // Define test regions
-        Region topLeft = new Region(0, 0, 200, 200);
-        Region bottomLeft = new Region(0, 880, 200, 200);  // Near bottom for 1080p
-        Region center = new Region(860, 440, 200, 200);
-        Region lowerLeftQuarter = new Region(0, 540, 960, 540);
-        
-        // Capture and save each region
-        captureAndSave(screen, topLeft, "top_left");
-        captureAndSave(screen, bottomLeft, "bottom_left");
-        captureAndSave(screen, center, "center");
-        captureAndSave(screen, lowerLeftQuarter, "lower_left_quarter");
-        
-        // Test 2: Highlight then capture to see if highlight appears in capture
-        System.out.println("\n--- Test 2: Highlight Then Capture ---");
-        
-        Region testRegion = new Region(100, 100, 300, 300);
-        System.out.printf("Highlighting region: %s%n", testRegion);
-        testRegion.highlight(); // Start persistent highlight
-        
-        Thread.sleep(500); // Let highlight appear
-        
-        // Capture the area where we highlighted
-        System.out.println("Capturing the highlighted area...");
-        ScreenImage capture = screen.capture(testRegion);
-        BufferedImage image = capture.getImage();
-        
-        File outputFile = new File("highlighted_region_capture.png");
-        ImageIO.write(image, "png", outputFile);
-        System.out.printf("Saved capture to: %s%n", outputFile.getAbsolutePath());
-        
-        testRegion.highlightOff(); // Turn off highlight
-        
-        // Test 3: Capture full screen and analyze
-        System.out.println("\n--- Test 3: Full Screen Capture Analysis ---");
-        
-        ScreenImage fullCapture = screen.capture();
-        BufferedImage fullImage = fullCapture.getImage();
-        
-        System.out.printf("Full screen capture size: %dx%d%n", 
-                fullImage.getWidth(), fullImage.getHeight());
-        
-        File fullScreenFile = new File("full_screen_capture.png");
-        ImageIO.write(fullImage, "png", fullScreenFile);
-        System.out.printf("Saved full screen to: %s%n", fullScreenFile.getAbsolutePath());
-        
-        // Test 4: Check if screen coordinate (0,0) matches image coordinate (0,0)
-        System.out.println("\n--- Test 4: Coordinate Origin Verification ---");
-        
-        // Highlight at (0,0)
-        Region originRegion = new Region(0, 0, 100, 100);
-        originRegion.highlight(3, "red");
-        
-        System.out.println("A RED highlight should appear at what SikuliX thinks is (0,0)");
-        System.out.println("Check the captured images to see if they match what you see on screen.");
-        
-        // Test 5: Create visual markers
-        System.out.println("\n--- Test 5: Creating Visual Reference Grid ---");
-        
-        // Create a grid of highlights
-        for (int x = 0; x < screen.w; x += 200) {
-            for (int y = 0; y < screen.h; y += 200) {
-                Region gridPoint = new Region(x, y, 10, 10);
-                gridPoint.highlight(0.1);
-                Thread.sleep(50);
-            }
-        }
-        
-        System.out.println("Brief grid flash completed. This shows SikuliX's coordinate grid.");
-        
-        // Test 6: Mouse position vs highlight position
-        System.out.println("\n--- Test 6: Mouse vs Highlight Coordinates ---");
+    public void compareScreenCaptureMethods() {
+        System.out.println("=== SCREEN CAPTURE COMPARISON TEST ===\n");
         
         try {
-            org.sikuli.script.Location mouseLoc = new org.sikuli.script.Location(
-                java.awt.MouseInfo.getPointerInfo().getLocation()
-            );
+            // 1. Get screen information
+            System.out.println("1. SCREEN INFORMATION:");
+            Screen screen = new Screen();
+            Rectangle screenBounds = screen.getBounds();
+            System.out.println("   SikuliX Screen.getBounds(): " + screenBounds.width + "x" + screenBounds.height);
             
-            System.out.printf("Mouse location: %s%n", mouseLoc);
+            // 2. Test SikuliX Screen.capture() with full screen
+            System.out.println("\n2. SIKULIX SCREEN.CAPTURE() - FULL SCREEN:");
+            ScreenImage sikuliCapture = screen.capture();
+            if (sikuliCapture != null && sikuliCapture.getImage() != null) {
+                BufferedImage sikuliImg = sikuliCapture.getImage();
+                System.out.println("   Captured dimensions: " + sikuliImg.getWidth() + "x" + sikuliImg.getHeight());
+                System.out.println("   Image type: " + getImageTypeName(sikuliImg.getType()));
+            } else {
+                System.out.println("   ERROR: SikuliX capture returned null");
+            }
             
-            // Create region around mouse
-            Region mouseRegion = new Region(
-                mouseLoc.x - 50, 
-                mouseLoc.y - 50, 
-                100, 100
-            );
+            // 3. Test SikuliX Screen.capture() with a region
+            System.out.println("\n3. SIKULIX SCREEN.CAPTURE() - WITH REGION:");
+            Region testRegion = new Region(0, 0, 100, 100);
+            ScreenImage regionCapture = screen.capture(testRegion);
+            if (regionCapture != null && regionCapture.getImage() != null) {
+                BufferedImage regionImg = regionCapture.getImage();
+                System.out.println("   Requested region: 100x100");
+                System.out.println("   Captured dimensions: " + regionImg.getWidth() + "x" + regionImg.getHeight());
+            } else {
+                System.out.println("   ERROR: Region capture returned null");
+            }
             
-            System.out.printf("Highlighting around mouse at: %s%n", mouseRegion);
-            mouseRegion.highlight(3, "green");
+            // 4. Test direct Robot capture
+            System.out.println("\n4. DIRECT ROBOT CAPTURE:");
+            Robot robot = new Robot();
             
-            // Capture that area
-            ScreenImage mouseCapture = screen.capture(mouseRegion);
-            File mouseFile = new File("mouse_region_capture.png");
-            ImageIO.write(mouseCapture.getImage(), "png", mouseFile);
-            System.out.printf("Saved mouse region to: %s%n", mouseFile.getAbsolutePath());
+            // Get default screen device info
+            GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
+            GraphicsDevice device = env.getDefaultScreenDevice();
+            GraphicsConfiguration config = device.getDefaultConfiguration();
+            
+            // Get logical bounds
+            Rectangle logicalBounds = config.getBounds();
+            System.out.println("   Logical screen bounds: " + logicalBounds.width + "x" + logicalBounds.height);
+            
+            // Get DPI scale
+            java.awt.geom.AffineTransform transform = config.getDefaultTransform();
+            double scaleX = transform.getScaleX();
+            double scaleY = transform.getScaleY();
+            System.out.println("   DPI Scale: " + (int)(scaleX * 100) + "% (scaleX=" + scaleX + ", scaleY=" + scaleY + ")");
+            
+            // Calculate physical dimensions
+            int physicalWidth = (int)(logicalBounds.width * scaleX);
+            int physicalHeight = (int)(logicalBounds.height * scaleY);
+            System.out.println("   Calculated physical dimensions: " + physicalWidth + "x" + physicalHeight);
+            
+            // Try capturing at logical resolution
+            System.out.println("\n   4a. Robot capture at logical resolution:");
+            BufferedImage logicalCapture = robot.createScreenCapture(new Rectangle(0, 0, logicalBounds.width, logicalBounds.height));
+            System.out.println("      Requested: " + logicalBounds.width + "x" + logicalBounds.height);
+            System.out.println("      Captured: " + logicalCapture.getWidth() + "x" + logicalCapture.getHeight());
+            
+            // Try capturing at physical resolution
+            System.out.println("\n   4b. Robot capture at physical resolution:");
+            BufferedImage physicalCapture = robot.createScreenCapture(new Rectangle(0, 0, physicalWidth, physicalHeight));
+            System.out.println("      Requested: " + physicalWidth + "x" + physicalHeight);
+            System.out.println("      Captured: " + physicalCapture.getWidth() + "x" + physicalCapture.getHeight());
+            
+            // 5. Check Toolkit screen size
+            System.out.println("\n5. TOOLKIT SCREEN SIZE:");
+            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+            System.out.println("   Toolkit.getScreenSize(): " + screenSize.width + "x" + screenSize.height);
+            
+            // 6. Check all graphics devices
+            System.out.println("\n6. ALL GRAPHICS DEVICES:");
+            GraphicsDevice[] devices = env.getScreenDevices();
+            for (int i = 0; i < devices.length; i++) {
+                GraphicsDevice gd = devices[i];
+                DisplayMode dm = gd.getDisplayMode();
+                System.out.println("   Device " + i + ": " + dm.getWidth() + "x" + dm.getHeight() + 
+                                 " @ " + dm.getRefreshRate() + "Hz");
+            }
+            
+            // 7. Summary
+            System.out.println("\n7. SUMMARY:");
+            System.out.println("   SikuliX sees: " + screenBounds.width + "x" + screenBounds.height);
+            System.out.println("   Toolkit sees: " + screenSize.width + "x" + screenSize.height);
+            System.out.println("   Logical resolution: " + logicalBounds.width + "x" + logicalBounds.height);
+            System.out.println("   Physical resolution: " + physicalWidth + "x" + physicalHeight);
+            System.out.println("   DPI Scaling: " + (int)(scaleX * 100) + "%");
+            
+            if (screenBounds.width == logicalBounds.width && screenBounds.height == logicalBounds.height) {
+                System.out.println("\n   => SikuliX is using LOGICAL resolution (DPI-aware)");
+                System.out.println("   => This matches Windows display scaling behavior");
+                System.out.println("   => Patterns captured at this resolution will match");
+            } else if (screenBounds.width == physicalWidth && screenBounds.height == physicalHeight) {
+                System.out.println("\n   => SikuliX is using PHYSICAL resolution (not DPI-aware)");
+            } else {
+                System.out.println("\n   => UNEXPECTED: SikuliX resolution doesn't match either logical or physical!");
+            }
             
         } catch (Exception e) {
-            System.err.println("Mouse test failed: " + e.getMessage());
+            System.err.println("ERROR during test: " + e.getMessage());
+            e.printStackTrace();
         }
-        
-        System.out.println("\n================================================================================");
-        System.out.println("COMPARISON COMPLETE");
-        System.out.println("Check the saved PNG files in the current directory.");
-        System.out.println("Compare what you saw on screen with what was captured.");
-        System.out.println("================================================================================\n");
     }
     
-    private void captureAndSave(Screen screen, Region region, String name) {
-        try {
-            System.out.printf("Capturing %s: %s%n", name, region);
-            
-            // First highlight it so we know where it should be
-            region.highlight(2, "yellow");
-            Thread.sleep(500);
-            
-            // Then capture it
-            ScreenImage capture = screen.capture(region);
-            BufferedImage image = capture.getImage();
-            
-            File outputFile = new File(name + "_capture.png");
-            ImageIO.write(image, "png", outputFile);
-            
-            System.out.printf("  Captured image size: %dx%d%n", 
-                    image.getWidth(), image.getHeight());
-            System.out.printf("  Saved to: %s%n", outputFile.getAbsolutePath());
-            
-            Thread.sleep(1500); // Wait for highlight to finish
-            
-        } catch (Exception e) {
-            System.err.printf("Failed to capture %s: %s%n", name, e.getMessage());
+    private String getImageTypeName(int type) {
+        switch(type) {
+            case BufferedImage.TYPE_INT_RGB: return "TYPE_INT_RGB (1)";
+            case BufferedImage.TYPE_INT_ARGB: return "TYPE_INT_ARGB (2)";
+            case BufferedImage.TYPE_INT_ARGB_PRE: return "TYPE_INT_ARGB_PRE (3)";
+            case BufferedImage.TYPE_INT_BGR: return "TYPE_INT_BGR (4)";
+            case BufferedImage.TYPE_3BYTE_BGR: return "TYPE_3BYTE_BGR (5)";
+            case BufferedImage.TYPE_4BYTE_ABGR: return "TYPE_4BYTE_ABGR (6)";
+            default: return "Type " + type;
         }
     }
 }
