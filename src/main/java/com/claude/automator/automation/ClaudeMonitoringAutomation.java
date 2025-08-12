@@ -85,7 +85,7 @@ public class ClaudeMonitoringAutomation {
     @Value("${claude.automator.monitoring.required-states:Prompt,Working}")
     private List<String> requiredStates;
 
-    @Value("${claude.automator.monitoring.max-iterations:5}")
+    @Value("${claude.automator.monitoring.max-iterations:2}")
     private int maxIterations;
 
     @Value("${claude.automator.monitoring.debug-capture:false}")
