@@ -1,1 +1,48 @@
 bin/
+
+# Gradle build files
+.gradle/
+build/
+
+# Debug and analysis files
+debug_images/
+history/
+*.md
+!README.md
+!CLAUDE.md
+
+# Python scripts (debug/analysis)
+*.py
+
+# Log files
+*.log
+app.log
+app_output.log
+output.log
+output2.log
+
+# Test output images
+*.png
+!src/main/resources/**/*.png
+!images/**/*.png
+
+# Temporary Java test files
+RunCaptureDebug.java
+TestRefinedLogging.java
+src/test/java/TestRegionDebug.java
+src/test/java/com/claude/automator/CaptureAnalysisTest.java
+src/test/java/com/claude/automator/CaptureDebugTest.java
+src/test/java/com/claude/automator/IterationLoggingTest.java
+src/test/java/com/claude/automator/MouseMovementTest.java
+src/test/java/com/claude/automator/debug/AnalyzeMatchImages.java
+src/test/java/com/claude/automator/debug/DPIAwareCaptureTest.java
+src/test/java/com/claude/automator/debug/DirectPatternMatchTest.java
+src/test/java/com/claude/automator/debug/PatternMatchingVerificationTest.java
+src/test/java/com/claude/automator/debug/RunImageDiagnostics.java
+src/test/java/com/claude/automator/debug/TestPatternMatchingWithZoom.java
+
+# Keep the main test that we want to preserve
+!src/test/java/com/claude/automator/debug/ScreenCaptureComparisonTest.java
+
+# Temporary configuration files
+src/main/java/com/claude/automator/config/ConsoleReporterConfiguration.java

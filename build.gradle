@@ -31,6 +31,13 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+    
+    // Show test output in console
+    testLogging {
+        events "passed", "skipped", "failed", "standardOut", "standardError"
+        showStandardStreams = true
+        exceptionFormat = 'full'
+    }
 }
 
 // Images are loaded directly from the images directory by Brobot/Sikuli
