@@ -23,12 +23,8 @@ public class ClaudeAutomatorApplication {
         // Additional SikuliX properties for macOS
         System.setProperty("apple.awt.UIElement", "false");
         
-        // CRITICAL: Enable v1.0.7 pattern matching approach (no alpha conversion)
-        // This fixes the ARGB vs RGB image type mismatch issue
-        System.setProperty("brobot.pattern.v107", "true");
-        System.setProperty("brobot.pattern.forceRGB", "false");
-        
         // Don't set MinSimilarity here - let it be configured from properties
+        // The v1.0.7 approach is now the default in Brobot library
         
         SpringApplication.run(ClaudeAutomatorApplication.class, args);
     }
