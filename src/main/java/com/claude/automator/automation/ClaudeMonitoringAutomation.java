@@ -166,6 +166,7 @@ public class ClaudeMonitoringAutomation {
         log.debug("Prompt state active, attempting to navigate to Working state");
 
         // Use action.find for verification before navigation
+        // State activation happens automatically in the Action framework
         ActionResult promptFound = action.find(promptState.getClaudePrompt());
 
         if (promptFound.isSuccess()) {
