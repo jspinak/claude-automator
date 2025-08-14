@@ -47,7 +47,7 @@ public class WorkingState {
             .setName("ClaudeIcon")
             .setSearchRegionOnObject(SearchRegionOnObject.builder()
                     .targetType(StateObject.Type.IMAGE)
-                    .targetStateName("Prompt")
+                    .targetStateName("PromptState")
                     .targetObjectName("ClaudePrompt")
                     .adjustments(MatchAdjustmentOptions.builder()
                             .addX(3)
