@@ -40,14 +40,14 @@ public class WorkingState {
         Region iconRegion = new Region(103, 600, 19, 18);
         
         claudeIcon = new StateImage.Builder()
-            .addPatterns("working/claude-icon-1", 
-                        "working/claude-icon-2", 
-                        "working/claude-icon-3", 
-                        "working/claude-icon-4")
+            .addPatterns("claude-icon-1", 
+                        "claude-icon-2", 
+                        "claude-icon-3", 
+                        "claude-icon-4")
             .setName("ClaudeIcon")
             .setSearchRegionOnObject(SearchRegionOnObject.builder()
                     .targetType(StateObject.Type.IMAGE)
-                    .targetStateName("PromptState")
+                    .targetStateName("Prompt")
                     .targetObjectName("ClaudePrompt")
                     .adjustments(MatchAdjustmentOptions.builder()
                             .addX(3)

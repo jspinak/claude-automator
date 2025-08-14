@@ -51,7 +51,7 @@ public class PromptState {
         // Initialize the claude prompt image with search region and ActionHistory
         // The ActionHistory is required for mock mode finds to work
         claudePrompt = new StateImage.Builder()
-            .addPatterns("prompt/claude-prompt-1","prompt/claude-prompt-2","prompt/claude-prompt-3")
+            .addPatterns("claude-prompt-1","claude-prompt-2","claude-prompt-3")
             .setName("ClaudePrompt")
             .setSearchRegionForAllPatterns(lowerLeftQuarter)
             .setFixedForAllPatterns(true)  // Mark all patterns as fixed
