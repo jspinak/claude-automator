@@ -1,17 +1,34 @@
 package com.claude.automator.states;
 
 import io.github.jspinak.brobot.annotations.State;
+import io.github.jspinak.brobot.config.FrameworkSettings;
 import io.github.jspinak.brobot.model.element.Region;
 import io.github.jspinak.brobot.model.state.StateImage;
 import io.github.jspinak.brobot.model.state.StateString;
+import io.github.jspinak.brobot.tools.testing.mock.state.MockStateManagement;
+import io.github.jspinak.brobot.tools.testing.mock.history.MockActionHistoryFactory;
+import jakarta.annotation.PostConstruct;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Represents the Prompt state where Claude is waiting for input.
+ * 
+ * This is the initial state of the application.
+ * In mock mode, this state has a 100% probability of being found,
+ * ensuring reliable transitions.
  */
 @State(initial = true)
 @Getter
+@Slf4j
 public class PromptState {
+    
+    @Autowired(required = false)
+    private MockStateManagement mockStateManagement;
+    
+    // Set to 100% for reliable mock transitions
+    private static final int MOCK_PROBABILITY = 100;
     
     private final StateImage claudePrompt;
     private final StateString continueCommand;
@@ -31,30 +48,41 @@ public class PromptState {
                           " w:" + lowerLeftQuarter.w() + 
                           " h:" + lowerLeftQuarter.h());
         
-        // Initialize the claude prompt image with search region
-        // The normal search region defines a limited area where patterns will be searched for.
-        // When the pattern is found and marked as fixed, it will set the fixed region.
-        // Until then, it continues to search within the defined search regions.
+        // Initialize the claude prompt image with search region and ActionHistory
+        // The ActionHistory is required for mock mode finds to work
         claudePrompt = new StateImage.Builder()
             .addPatterns("prompt/claude-prompt-1","prompt/claude-prompt-2","prompt/claude-prompt-3")
             .setName("ClaudePrompt")
             .setSearchRegionForAllPatterns(lowerLeftQuarter)
             .setFixedForAllPatterns(true)  // Mark all patterns as fixed
+            .withActionHistory(MockActionHistoryFactory.lowerLeftElement(293, 83))  // Use the new factory method
             .build();
         
-        // Debug: verify patterns have search regions
+        // Debug: verify patterns have search regions and ActionHistory
         System.out.println("[PromptState] Created StateImage with " + claudePrompt.getPatterns().size() + " patterns");
         for (io.github.jspinak.brobot.model.element.Pattern p : claudePrompt.getPatterns()) {
             System.out.println("[PromptState] Pattern '" + p.getName() + "':");
             System.out.println("  - Fixed: " + p.isFixed());
             System.out.println("  - Search regions: " + p.getSearchRegions().getRegions());
-            System.out.println("  - getRegions(fixed=true): " + p.getRegions());
-            System.out.println("  - getRegionsForSearch(): " + p.getRegionsForSearch());
+            System.out.println("  - Has ActionHistory: " + (p.getMatchHistory() != null && !p.getMatchHistory().getSnapshots().isEmpty()));
         }
         // Create the continue command as a string
         continueCommand = new StateString.Builder()
             .setName("ContinueCommand")
             .setString("continue\n")
             .build();
+    }
+    
+    @PostConstruct
+    public void configureMockProbability() {
+        // Only configure if mock mode is enabled and MockStateManagement is available
+        if (FrameworkSettings.mock && mockStateManagement != null) {
+            mockStateManagement.setStateProbabilities(MOCK_PROBABILITY, "Prompt");
+            log.info("[PROMPT STATE] Mock mode enabled - probability set to {}%", MOCK_PROBABILITY);
+        } else if (FrameworkSettings.mock) {
+            log.warn("[PROMPT STATE] Mock mode enabled but MockStateManagement not available");
+        } else {
+            log.debug("[PROMPT STATE] Live mode - no mock probability configuration needed");
+        }
     }
 }

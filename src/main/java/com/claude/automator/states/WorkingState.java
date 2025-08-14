@@ -2,24 +2,43 @@ package com.claude.automator.states;
 
 import io.github.jspinak.brobot.annotations.State;
 import io.github.jspinak.brobot.action.basic.find.MatchAdjustmentOptions;
-import io.github.jspinak.brobot.model.element.Region;
+import io.github.jspinak.brobot.config.FrameworkSettings;
 import io.github.jspinak.brobot.model.element.SearchRegionOnObject;
+import io.github.jspinak.brobot.model.element.Region;
 import io.github.jspinak.brobot.model.state.StateImage;
 import io.github.jspinak.brobot.model.state.StateObject;
+import io.github.jspinak.brobot.tools.testing.mock.state.MockStateManagement;
+import io.github.jspinak.brobot.tools.testing.mock.history.MockActionHistoryBuilder;
+import jakarta.annotation.PostConstruct;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Represents the Working state where Claude is actively processing.
+ * 
+ * This state is not initial - it becomes active after transitioning from Prompt.
+ * In mock mode, this state has a 100% probability of being found,
+ * ensuring reliable transitions.
  */
 @State
 @Getter
+@Slf4j
 public class WorkingState {
+    
+    @Autowired(required = false)
+    private MockStateManagement mockStateManagement;
+    
+    // Set to 100% for reliable mock transitions
+    private static final int MOCK_PROBABILITY = 100;
     
     private final StateImage claudeIcon;
     
     public WorkingState() {
-        // Create the claude icon images with declarative region definition
-        // The search region will be dynamically defined relative to the prompt StateImage
+        // Create the claude icon images with declarative region definition and ActionHistory
+        // The ActionHistory is required for mock mode finds to work
+        Region iconRegion = new Region(103, 600, 19, 18);
+        
         claudeIcon = new StateImage.Builder()
             .addPatterns("working/claude-icon-1", 
                         "working/claude-icon-2", 
@@ -37,6 +56,20 @@ public class WorkingState {
                             .addH(55)
                             .build())
                     .build())
+            .withActionHistory(MockActionHistoryBuilder.Presets.reliable(iconRegion))  // Use the new builder method
             .build();
+    }
+    
+    @PostConstruct
+    public void configureMockProbability() {
+        // Only configure if mock mode is enabled and MockStateManagement is available
+        if (FrameworkSettings.mock && mockStateManagement != null) {
+            mockStateManagement.setStateProbabilities(MOCK_PROBABILITY, "Working");
+            log.info("[WORKING STATE] Mock mode enabled - probability set to {}%", MOCK_PROBABILITY);
+        } else if (FrameworkSettings.mock) {
+            log.warn("[WORKING STATE] Mock mode enabled but MockStateManagement not available");
+        } else {
+            log.debug("[WORKING STATE] Live mode - no mock probability configuration needed");
+        }
     }
 }
