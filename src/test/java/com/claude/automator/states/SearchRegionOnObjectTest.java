@@ -13,10 +13,10 @@ public class SearchRegionOnObjectTest {
     @Test
     public void testSearchRegionOnObjectBuilder() {
         MatchAdjustmentOptions adjustOptions = MatchAdjustmentOptions.builder()
-                .addX(3)
-                .addY(10)
-                .addW(30)
-                .addH(55)
+                .setAddX(3)
+                .setAddY(10)
+                .setAddW(30)
+                .setAddH(55)
                 .build();
         
         assertNotNull(adjustOptions);
@@ -26,10 +26,10 @@ public class SearchRegionOnObjectTest {
         assertEquals(55, adjustOptions.getAddH());
         
         SearchRegionOnObject searchRegion = SearchRegionOnObject.builder()
-                .targetType(StateObject.Type.IMAGE)
-                .targetStateName("Prompt")
-                .targetObjectName("ClaudePrompt")
-                .adjustments(adjustOptions)
+                .setTargetType(StateObject.Type.IMAGE)
+                .setTargetStateName("Prompt")
+                .setTargetObjectName("ClaudePrompt")
+                .setAdjustments(adjustOptions)
                 .build();
         
         assertNotNull(searchRegion);

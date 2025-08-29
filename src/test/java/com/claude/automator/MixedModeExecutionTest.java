@@ -5,7 +5,6 @@ import com.claude.automator.states.WorkingState;
 import io.github.jspinak.brobot.action.Action;
 import io.github.jspinak.brobot.action.ActionResult;
 import io.github.jspinak.brobot.config.FrameworkSettings;
-import io.github.jspinak.brobot.config.HybridExecutionConfiguration;
 import io.github.jspinak.brobot.navigation.service.StateService;
 import io.github.jspinak.brobot.navigation.transition.StateNavigator;
 import io.github.jspinak.brobot.statemanagement.StateMemory;
@@ -59,8 +58,6 @@ public class MixedModeExecutionTest {
     @Autowired
     private WorkingState workingState;
     
-    @Autowired(required = false)
-    private HybridExecutionConfiguration.HybridComponentConfigurer hybridConfigurer;
     
     @BeforeEach
     public void setUp() {
@@ -260,9 +257,7 @@ public class MixedModeExecutionTest {
         if (!FrameworkSettings.mock) {
             log.info("Switching to MOCK mode");
             FrameworkSettings.mock = true;
-            if (hybridConfigurer != null) {
-                hybridConfigurer.switchAllToMock();
-            }
+            // Mode switching would happen here if hybrid configuration was available
         }
     }
     
@@ -270,9 +265,7 @@ public class MixedModeExecutionTest {
         if (FrameworkSettings.mock) {
             log.info("Switching to LIVE mode");
             FrameworkSettings.mock = false;
-            if (hybridConfigurer != null) {
-                hybridConfigurer.switchAllToLive();
-            }
+            // Mode switching would happen here if hybrid configuration was available
         }
     }
     

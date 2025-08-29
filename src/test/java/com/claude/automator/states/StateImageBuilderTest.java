@@ -15,14 +15,14 @@ public class StateImageBuilderTest {
     @Test
     public void testStateImageWithSearchRegionOnObject() {
         SearchRegionOnObject searchRegion = SearchRegionOnObject.builder()
-                .targetType(StateObject.Type.IMAGE)
-                .targetStateName("Prompt")
-                .targetObjectName("ClaudePrompt")
-                .adjustments(MatchAdjustmentOptions.builder()
-                        .addX(3)
-                        .addY(10)
-                        .addW(30)
-                        .addH(55)
+                .setTargetType(StateObject.Type.IMAGE)
+                .setTargetStateName("Prompt")
+                .setTargetObjectName("ClaudePrompt")
+                .setAdjustments(MatchAdjustmentOptions.builder()
+                        .setAddX(3)
+                        .setAddY(10)
+                        .setAddW(30)
+                        .setAddH(55)
                         .build())
                 .build();
         
