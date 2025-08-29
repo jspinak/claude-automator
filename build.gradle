@@ -25,7 +25,8 @@ dependencies {
     // AspectJ for mock interceptors
     implementation 'org.springframework.boot:spring-boot-starter-aop'
     
-    // Lombok annotation processor still needed for compilation
+    // Lombok for compile-time annotations and annotation processing
+    compileOnly 'org.projectlombok:lombok:1.18.32'
     annotationProcessor 'org.projectlombok:lombok:1.18.32'
     
     // Testing
