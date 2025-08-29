@@ -4,11 +4,9 @@ import io.github.jspinak.brobot.annotations.State;
 import io.github.jspinak.brobot.action.basic.find.MatchAdjustmentOptions;
 import io.github.jspinak.brobot.config.FrameworkSettings;
 import io.github.jspinak.brobot.model.element.SearchRegionOnObject;
-import io.github.jspinak.brobot.model.element.Region;
 import io.github.jspinak.brobot.model.state.StateImage;
 import io.github.jspinak.brobot.model.state.StateObject;
 import io.github.jspinak.brobot.tools.testing.mock.state.MockStateManagement;
-import io.github.jspinak.brobot.tools.testing.mock.history.MockActionHistoryBuilder;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -35,9 +33,8 @@ public class WorkingState {
     private final StateImage claudeIcon;
     
     public WorkingState() {
-        // Create the claude icon images with declarative region definition and ActionHistory
-        // The ActionHistory is required for mock mode finds to work
-        Region iconRegion = new Region(103, 600, 19, 18);
+        // Create the claude icon images with declarative region definition
+        // Do NOT set a fixed ActionHistory as it will override the SearchRegionOnObject
         
         claudeIcon = new StateImage.Builder()
             .addPatterns("claude-icon-1", 
@@ -45,6 +42,7 @@ public class WorkingState {
                         "claude-icon-3", 
                         "claude-icon-4")
             .setName("ClaudeIcon")
+            .setFixedForAllPatterns(true)  // Enable fixed region optimization once found
             .setSearchRegionOnObject(SearchRegionOnObject.builder()
                     .setTargetType(StateObject.Type.IMAGE)
                     .setTargetStateName("Prompt")
@@ -56,8 +54,10 @@ public class WorkingState {
                             .setAddH(55)
                             .build())
                     .build())
-            .withActionHistory(MockActionHistoryBuilder.Presets.reliable(iconRegion))  // Use the new builder method
             .build();
+        
+        log.info("WorkingState ClaudeIcon search region config: {}", 
+                claudeIcon.getSearchRegionOnObject());
     }
     
     @PostConstruct
