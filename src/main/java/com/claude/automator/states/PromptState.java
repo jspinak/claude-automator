@@ -1,16 +1,11 @@
 package com.claude.automator.states;
 
 import io.github.jspinak.brobot.annotations.State;
-import io.github.jspinak.brobot.config.FrameworkSettings;
 import io.github.jspinak.brobot.model.element.Region;
 import io.github.jspinak.brobot.model.state.StateImage;
 import io.github.jspinak.brobot.model.state.StateString;
-import io.github.jspinak.brobot.tools.testing.mock.state.MockStateManagement;
-import io.github.jspinak.brobot.tools.testing.mock.history.MockActionHistoryFactory;
-import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Represents the Prompt state where Claude is waiting for input.
@@ -23,12 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Getter
 @Slf4j
 public class PromptState {
-    
-    @Autowired(required = false)
-    private MockStateManagement mockStateManagement;
-    
-    // Set to 100% for reliable mock transitions
-    private static final int MOCK_PROBABILITY = 100;
     
     private final StateImage claudePrompt;
     private final StateString continueCommand;
@@ -55,7 +44,6 @@ public class PromptState {
             .setName("ClaudePrompt")
             .setSearchRegionForAllPatterns(lowerLeftQuarter)
             .setFixedForAllPatterns(true)  // Mark all patterns as fixed
-            .withActionHistory(MockActionHistoryFactory.lowerLeftElement(293, 83))  // Use the new factory method
             .build();
         
         // Debug: verify patterns have search regions and ActionHistory
@@ -73,16 +61,4 @@ public class PromptState {
             .build();
     }
     
-    @PostConstruct
-    public void configureMockProbability() {
-        // Only configure if mock mode is enabled and MockStateManagement is available
-        if (FrameworkSettings.mock && mockStateManagement != null) {
-            mockStateManagement.setStateProbabilities(MOCK_PROBABILITY, "Prompt");
-            log.info("[PROMPT STATE] Mock mode enabled - probability set to {}%", MOCK_PROBABILITY);
-        } else if (FrameworkSettings.mock) {
-            log.warn("[PROMPT STATE] Mock mode enabled but MockStateManagement not available");
-        } else {
-            log.debug("[PROMPT STATE] Live mode - no mock probability configuration needed");
-        }
-    }
 }

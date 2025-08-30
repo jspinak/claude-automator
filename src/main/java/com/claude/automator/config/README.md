@@ -2,7 +2,7 @@
 
 ## Configuration Now Handled by Brobot Framework
 
-As of Brobot v1.2.0, initial state configuration is fully handled by the framework. The `@State(initial = true)` annotation on PromptState is all that's needed.
+As of Brobot v1.2.0, initial state configuration and declarative region dependencies are fully handled by the framework. The `@State(initial = true)` annotation on PromptState is all that's needed.
 
 ## Previous Configuration Classes (Removed)
 
@@ -10,6 +10,8 @@ The following configuration classes have been removed as they are no longer need
 - `InitialStateConfiguration` - Now handled by `InitialStateAutoConfiguration` in Brobot
 - `InitialStateInterceptor` - Framework ensures correct initial state activation
 - `MockInitialStateActivator` - Framework's `ApplicationReadyEvent` listener handles this
+- `DeclarativeRegionFix` - Declarative regions now work correctly with dependency ordering
+- `InitialStateSearchOrderFix` - Initial state search order is handled by the framework
 
 ## Current Configuration
 
