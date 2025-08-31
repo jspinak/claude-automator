@@ -51,7 +51,9 @@ public class PromptState {
         for (io.github.jspinak.brobot.model.element.Pattern p : claudePrompt.getPatterns()) {
             System.out.println("[PromptState] Pattern '" + p.getName() + "':");
             System.out.println("  - Fixed: " + p.isFixed());
-            System.out.println("  - Search regions: " + p.getSearchRegions().getRegions());
+            System.out.println("  - Search regions (getRegions()): " + p.getSearchRegions().getRegions());
+            System.out.println("  - Search regions (getRegions(fixed)): " + p.getSearchRegions().getRegions(p.isFixed()));
+            System.out.println("  - getRegionsForSearch(): " + p.getRegionsForSearch());
             System.out.println("  - Has ActionHistory: " + (p.getMatchHistory() != null && !p.getMatchHistory().getSnapshots().isEmpty()));
         }
         // Create the continue command as a string
