@@ -32,6 +32,7 @@ public class WorkingState {
                         "working/claude-icon-3", 
                         "working/claude-icon-4")
             .setName("ClaudeIcon")
+            .setHighlightColor("#0000FF")  // Blue color for icon highlighting
             .setFixedForAllPatterns(true)  // Enable fixed region optimization once found
             .setSearchRegionOnObject(SearchRegionOnObject.builder()
                     .setTargetType(StateObject.Type.IMAGE)
