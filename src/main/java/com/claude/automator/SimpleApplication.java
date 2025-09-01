@@ -13,10 +13,11 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 public class SimpleApplication {
 
     public static void main(String[] args) {
-        System.setProperty("sikuli.Debug", "3");
-        System.setProperty("sikuli.Silence", "false");
+        System.setProperty("sikuli.Debug", "0");
+        System.setProperty("sikuli.Silence", "true");
         System.setProperty("java.awt.headless", "false");
         System.setProperty("apple.awt.UIElement", "false");
+        System.setProperty("spring.profiles.active", "simple");
         
         ConfigurableApplicationContext context = SpringApplication.run(SimpleApplication.class, args);
         

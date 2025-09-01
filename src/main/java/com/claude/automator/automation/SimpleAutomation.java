@@ -25,27 +25,20 @@ public class SimpleAutomation {
     private WorkingState workingState;
 
     public void run() {
-        System.out.println("Starting SimpleApplication automation...");
-        
-        System.out.println("Looking for Claude Prompt...");
         boolean foundPrompt = findClaudePrompt();
         
         if (foundPrompt) {
-            System.out.println("Claude Prompt found!");
-            System.out.println("Looking for Claude Icon...");
+            System.out.println("✓ Claude Prompt");
             boolean foundIcon = findClaudeIcon();
             
             if (foundIcon) {
-                System.out.println("Claude Icon found!");
-                System.out.println("Both elements found successfully.");
+                System.out.println("✓ Claude Icon");
             } else {
-                System.out.println("Claude Icon not found.");
+                System.out.println("✗ Claude Icon");
             }
         } else {
-            System.out.println("Claude Prompt not found.");
+            System.out.println("✗ Claude Prompt");
         }
-        
-        System.out.println("SimpleApplication automation completed.");
     }
 
     private boolean findClaudePrompt() {
@@ -61,13 +54,11 @@ public class SimpleAutomation {
         
         // Highlight found matches
         if (result.isSuccess() && !result.getMatchList().isEmpty()) {
-            System.out.println("Highlighting Claude Prompt match...");
             HighlightOptions highlightOptions = new HighlightOptions.Builder()
                 .setHighlightSeconds(2.0)
                 .setHighlightColor("GREEN")
                 .build();
             
-            // Create collection with matched regions for highlighting
             ObjectCollection highlightCollection = new ObjectCollection.Builder()
                 .withRegions(result.getMatchList().get(0).getRegion())
                 .build();
@@ -91,13 +82,11 @@ public class SimpleAutomation {
         
         // Highlight found matches
         if (result.isSuccess() && !result.getMatchList().isEmpty()) {
-            System.out.println("Highlighting Claude Icon match...");
             HighlightOptions highlightOptions = new HighlightOptions.Builder()
                 .setHighlightSeconds(2.0)
                 .setHighlightColor("BLUE")
                 .build();
             
-            // Create collection with matched regions for highlighting
             ObjectCollection highlightCollection = new ObjectCollection.Builder()
                 .withRegions(result.getMatchList().get(0).getRegion())
                 .build();
