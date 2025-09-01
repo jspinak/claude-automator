@@ -7,6 +7,7 @@ import io.github.jspinak.brobot.action.Action;
 import io.github.jspinak.brobot.action.ActionResult;
 import io.github.jspinak.brobot.action.ObjectCollection;
 import io.github.jspinak.brobot.action.basic.find.PatternFindOptions;
+import io.github.jspinak.brobot.action.basic.highlight.HighlightOptions;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -56,8 +57,25 @@ public class SimpleAutomation {
             .withImages(promptState.getClaudePrompt())
             .build();
         
-        ActionResult report = action.perform(options, promptCollection);
-        return report.isSuccess();
+        ActionResult result = action.perform(options, promptCollection);
+        
+        // Highlight found matches
+        if (result.isSuccess() && !result.getMatchList().isEmpty()) {
+            System.out.println("Highlighting Claude Prompt match...");
+            HighlightOptions highlightOptions = new HighlightOptions.Builder()
+                .setHighlightSeconds(2.0)
+                .setHighlightColor("GREEN")
+                .build();
+            
+            // Create collection with matched regions for highlighting
+            ObjectCollection highlightCollection = new ObjectCollection.Builder()
+                .withRegions(result.getMatchList().get(0).getRegion())
+                .build();
+            
+            action.perform(highlightOptions, highlightCollection);
+        }
+        
+        return result.isSuccess();
     }
 
     private boolean findClaudeIcon() {
@@ -69,7 +87,24 @@ public class SimpleAutomation {
             .withImages(workingState.getClaudeIcon())
             .build();
 
-        ActionResult report = action.perform(options, iconCollection);
-        return report.isSuccess();
+        ActionResult result = action.perform(options, iconCollection);
+        
+        // Highlight found matches
+        if (result.isSuccess() && !result.getMatchList().isEmpty()) {
+            System.out.println("Highlighting Claude Icon match...");
+            HighlightOptions highlightOptions = new HighlightOptions.Builder()
+                .setHighlightSeconds(2.0)
+                .setHighlightColor("BLUE")
+                .build();
+            
+            // Create collection with matched regions for highlighting
+            ObjectCollection highlightCollection = new ObjectCollection.Builder()
+                .withRegions(result.getMatchList().get(0).getRegion())
+                .build();
+            
+            action.perform(highlightOptions, highlightCollection);
+        }
+        
+        return result.isSuccess();
     }
 }
