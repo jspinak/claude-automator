@@ -46,3 +46,8 @@ tasks.named('test') {
 
 // Images are loaded directly from the images directory by Brobot/Sikuli
 // No need to copy them to build resources
+
+// Specify the main class to avoid ambiguity
+springBoot {
+    mainClass = 'com.claude.automator.ClaudeAutomatorApplication'
+}
