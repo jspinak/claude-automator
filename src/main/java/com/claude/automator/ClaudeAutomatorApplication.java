@@ -4,10 +4,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
 
 @SpringBootApplication
 @EnableAspectJAutoProxy
@@ -29,16 +25,6 @@ public class ClaudeAutomatorApplication {
         SpringApplication.run(ClaudeAutomatorApplication.class, args);
     }
     
-    @Component
-    public static class SimilarityConfigurer {
-        
-        @Value("${brobot.action.similarity:0.70}")
-        private double similarity;
-        
-        @EventListener(ApplicationReadyEvent.class)
-        public void configureSimilarity() {
-            org.sikuli.basics.Settings.MinSimilarity = similarity;
-            System.out.println("Configured SikuliX MinSimilarity to: " + similarity);
-        }
-    }
+    // DPI configuration is now handled by BrobotDPIConfiguration in the Brobot library
+    // No need for application-specific configuration
 }
