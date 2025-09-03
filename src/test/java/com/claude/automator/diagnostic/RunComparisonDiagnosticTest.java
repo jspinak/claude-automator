@@ -17,7 +17,7 @@ import org.springframework.test.context.TestPropertySource;
  * 
  * Or run a specific test method by clicking the green arrow next to it.
  */
-@SpringBootTest
+@SpringBootTest(classes = com.claude.automator.ClaudeAutomatorApplication.class)
 @TestPropertySource(properties = {
     "brobot.logging.verbosity=VERBOSE",
     "logging.level.io.github.jspinak.brobot=DEBUG",
