@@ -27,10 +27,18 @@ public class WorkingState {
         // Do NOT set a fixed ActionHistory as it will override the SearchRegionOnObject
         
         claudeIcon = new StateImage.Builder()
-            .addPatterns("working/claude-icon-1", 
-                        "working/claude-icon-2", 
-                        "working/claude-icon-3", 
-                        "working/claude-icon-4")
+            .addPatterns(
+                // Original patterns
+                "working/claude-icon-1", 
+                "working/claude-icon-2", 
+                "working/claude-icon-3", 
+                "working/claude-icon-4",
+                // 80% scaled patterns (pre-scaled to match 125% Windows scaling)
+                "working/claude-icon-1-80",
+                "working/claude-icon-2-80", 
+                "working/claude-icon-3-80",
+                "working/claude-icon-4-80"
+            )
             .setName("ClaudeIcon")
             .setHighlightColor("#0000FF")  // Blue color for icon highlighting
             .setFixedForAllPatterns(true)  // Enable fixed region optimization once found
