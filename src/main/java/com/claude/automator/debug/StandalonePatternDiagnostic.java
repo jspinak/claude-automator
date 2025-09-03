@@ -4,6 +4,7 @@ import com.claude.automator.states.PromptState;
 import com.claude.automator.states.WorkingState;
 import io.github.jspinak.brobot.action.Action;
 import io.github.jspinak.brobot.config.core.BrobotAutoConfiguration;
+import io.github.jspinak.brobot.tools.diagnostics.PatternMatchingDiagnostics;
 import lombok.extern.slf4j.Slf4j;
 import org.sikuli.basics.Settings;
 import org.springframework.boot.CommandLineRunner;
@@ -39,6 +40,7 @@ public class StandalonePatternDiagnostic {
         System.setProperty("java.awt.headless", "false");
         
         log.info("Starting Pattern Matching Diagnostic Tool...");
+        log.info("DPI configuration will be handled by Brobot ApplicationContextInitializer");
         SpringApplication.run(StandalonePatternDiagnostic.class, args);
     }
 

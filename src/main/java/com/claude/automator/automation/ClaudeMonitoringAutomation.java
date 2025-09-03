@@ -14,7 +14,7 @@ import io.github.jspinak.brobot.action.ObjectCollection;
 import com.claude.automator.states.WorkingState;
 import com.claude.automator.states.PromptState;
 import com.claude.automator.diagnostics.BrobotScreenCaptureDiagnostic;
-import com.claude.automator.debug.PatternMatchingDiagnostics;
+import io.github.jspinak.brobot.tools.diagnostics.PatternMatchingDiagnostics;
 import io.github.jspinak.brobot.util.image.debug.CaptureDebugger;
 import io.github.jspinak.brobot.model.element.Location;
 import io.github.jspinak.brobot.model.element.Positions;
