@@ -249,7 +249,7 @@ public class PatternMatchingDiagnostics {
                 .build();
             
             ObjectCollection collection = new ObjectCollection.Builder()
-                .withStateImages(testImage)
+                .withImages(testImage)
                 .build();
             
             ActionResult actionResult = action.perform(ActionType.FIND, collection, options);

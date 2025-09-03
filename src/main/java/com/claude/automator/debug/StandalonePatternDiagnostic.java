@@ -92,7 +92,6 @@ public class StandalonePatternDiagnostic {
         log.info("Settings.AlwaysResize: {}", Settings.AlwaysResize);
         log.info("Settings.MinSimilarity: {}", Settings.MinSimilarity);
         log.info("Settings.CheckLastSeen: {}", Settings.CheckLastSeen);
-        log.info("Settings.FindFailedResponse: {}", Settings.FindFailedResponse);
         log.info("Settings.WaitScanRate: {}", Settings.WaitScanRate);
         log.info("Settings.ObserveScanRate: {}", Settings.ObserveScanRate);
         
