@@ -9,8 +9,11 @@ import org.springframework.stereotype.Component;
 /**
  * Debug listener to trace event flow for StatesRegisteredEvent.
  * This helps identify if events are being published and received properly.
+ * 
+ * DISABLED: Commented out to reduce verbose logging in production.
+ * Uncomment @Component annotation to re-enable for debugging.
  */
-@Component
+// @Component  // DISABLED - Too verbose for normal operation
 @Slf4j
 public class EventDebugListener {
     

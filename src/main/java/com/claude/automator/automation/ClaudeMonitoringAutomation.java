@@ -14,6 +14,7 @@ import io.github.jspinak.brobot.action.ObjectCollection;
 import com.claude.automator.states.WorkingState;
 import com.claude.automator.states.PromptState;
 import com.claude.automator.diagnostics.BrobotScreenCaptureDiagnostic;
+import com.claude.automator.debug.PatternMatchingDiagnostics;
 import io.github.jspinak.brobot.util.image.debug.CaptureDebugger;
 import io.github.jspinak.brobot.model.element.Location;
 import io.github.jspinak.brobot.model.element.Positions;
@@ -68,6 +69,10 @@ public class ClaudeMonitoringAutomation {
     // Diagnostic component for screenshot capture
     @Autowired(required = false)
     private BrobotScreenCaptureDiagnostic screenCaptureDiagnostic;
+    
+    // Pattern matching diagnostics
+    @Autowired(required = false)
+    private PatternMatchingDiagnostics patternDiagnostics;
 
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private ScheduledFuture<?> scheduledTask;
@@ -97,6 +102,13 @@ public class ClaudeMonitoringAutomation {
         // Log the search region configuration for debugging
         log.info("WorkingState ClaudeIcon search region config: {}",
                 workingState.getClaudeIcon().getSearchRegionOnObject());
+        
+        // Run comprehensive pattern diagnostics at startup
+        if (patternDiagnostics != null) {
+            log.info("Running pattern matching diagnostics...");
+            patternDiagnostics.diagnoseStateImage(promptState.getClaudePrompt(), "PROMPT_STATE_STARTUP");
+            patternDiagnostics.diagnoseStateImage(workingState.getClaudeIcon(), "WORKING_STATE_STARTUP");
+        }
 
         log.info("Starting monitoring with max iterations: {}", maxIterations);
 
