@@ -19,6 +19,7 @@ import io.github.jspinak.brobot.util.image.debug.CaptureDebugger;
 import io.github.jspinak.brobot.model.element.Location;
 import io.github.jspinak.brobot.model.element.Positions;
 import io.github.jspinak.brobot.model.element.Region;
+import java.awt.GraphicsEnvironment;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -103,11 +104,13 @@ public class ClaudeMonitoringAutomation {
         log.info("WorkingState ClaudeIcon search region config: {}",
                 workingState.getClaudeIcon().getSearchRegionOnObject());
         
-        // Run comprehensive pattern diagnostics at startup
-        if (patternDiagnostics != null) {
+        // Run comprehensive pattern diagnostics at startup (skip if headless)
+        if (patternDiagnostics != null && !GraphicsEnvironment.isHeadless()) {
             log.info("Running pattern matching diagnostics...");
             patternDiagnostics.diagnoseStateImage(promptState.getClaudePrompt(), "PROMPT_STATE_STARTUP");
             patternDiagnostics.diagnoseStateImage(workingState.getClaudeIcon(), "WORKING_STATE_STARTUP");
+        } else if (GraphicsEnvironment.isHeadless()) {
+            log.warn("Skipping pattern diagnostics in headless mode");
         }
 
         log.info("Starting monitoring with max iterations: {}", maxIterations);
