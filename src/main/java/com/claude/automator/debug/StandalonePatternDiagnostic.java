@@ -3,7 +3,7 @@ package com.claude.automator.debug;
 import com.claude.automator.states.PromptState;
 import com.claude.automator.states.WorkingState;
 import io.github.jspinak.brobot.action.Action;
-import io.github.jspinak.brobot.core.configuration.BrobotCoreAutoConfiguration;
+import io.github.jspinak.brobot.config.core.BrobotAutoConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.sikuli.basics.Settings;
 import org.springframework.boot.CommandLineRunner;
@@ -28,7 +28,7 @@ import org.springframework.context.annotation.Import;
  */
 @SpringBootApplication
 @ComponentScan(basePackages = {"com.claude.automator", "io.github.jspinak.brobot"})
-@Import(BrobotCoreAutoConfiguration.class)
+@Import(BrobotAutoConfiguration.class)
 @Slf4j
 public class StandalonePatternDiagnostic {
 
