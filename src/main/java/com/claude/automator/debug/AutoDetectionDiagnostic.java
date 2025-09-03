@@ -1,6 +1,5 @@
 package com.claude.automator.debug;
 
-import io.github.jspinak.brobot.config.BrobotDPIAutoDetector;
 import org.sikuli.basics.Settings;
 import org.sikuli.script.Screen;
 import org.sikuli.script.ScreenImage;
@@ -9,6 +8,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+
+import io.github.jspinak.brobot.config.dpi.DPIAutoDetector;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -26,7 +27,7 @@ public class AutoDetectionDiagnostic {
     }
     
     @Bean
-    CommandLineRunner diagnose(BrobotDPIAutoDetector detector) {
+    CommandLineRunner diagnose(DPIAutoDetector detector) {
         return args -> {
             System.out.println("\n========== AUTO-DETECTION DIAGNOSTIC ==========\n");
             

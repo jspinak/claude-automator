@@ -1,11 +1,12 @@
 package com.claude.automator.examples;
 
-import io.github.jspinak.brobot.startup.InitialStateVerifier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.annotation.Order;
+
+import io.github.jspinak.brobot.startup.verification.InitialStateVerifier;
 
 /**
  * Example of programmatic initial state verification.
