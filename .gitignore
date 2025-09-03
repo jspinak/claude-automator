@@ -28,6 +28,24 @@ output2.log
 
 # Temporary Java test files
 RunCaptureDebug.java
+
+# JVM attach files (debugging artifacts)
+.attach_pid*
+
+# Shell scripts (test/debug utilities)
+*.sh
+!gradlew
+
+# Batch files (Windows test scripts)
+*.bat
+!gradlew.bat
+
+# Local JAR files (should use dependency management)
+libs/
+
+# Test output directories
+test-output/
+test-results/
 TestRefinedLogging.java
 src/test/java/TestRegionDebug.java
 src/test/java/com/claude/automator/CaptureAnalysisTest.java
