@@ -5,6 +5,7 @@ import com.claude.automator.states.WorkingState;
 import io.github.jspinak.brobot.action.Action;
 import io.github.jspinak.brobot.config.core.BrobotAutoConfiguration;
 import io.github.jspinak.brobot.tools.diagnostics.PatternMatchingDiagnostics;
+import io.github.jspinak.brobot.tools.diagnostics.SikuliXBrobotComparisonDiagnostic;
 import lombok.extern.slf4j.Slf4j;
 import org.sikuli.basics.Settings;
 import org.springframework.boot.CommandLineRunner;
@@ -47,6 +48,7 @@ public class StandalonePatternDiagnostic {
     @Bean
     public CommandLineRunner diagnosticRunner(
             PatternMatchingDiagnostics diagnostics,
+            SikuliXBrobotComparisonDiagnostic comparisonDiagnostic,
             PromptState promptState,
             WorkingState workingState,
             Action action) {
@@ -75,6 +77,14 @@ public class StandalonePatternDiagnostic {
             
             // Test with different AlwaysResize values
             testWithDifferentScalingFactors(diagnostics, promptState, workingState);
+            
+            // Run SikuliX vs Brobot comparison diagnostic
+            log.info("\n");
+            log.info("═══════════════════════════════════════════════════════════════════");
+            log.info("              SIKULIX vs BROBOT COMPARISON DIAGNOSTIC");
+            log.info("═══════════════════════════════════════════════════════════════════");
+            comparisonDiagnostic.comparePatternMatching(promptState.getClaudePrompt(), "PROMPT_STATE");
+            comparisonDiagnostic.comparePatternMatching(workingState.getClaudeIcon(), "WORKING_STATE");
             
             // Final recommendations
             provideFinalRecommendations();
