@@ -1,0 +1,52 @@
+// Task to download FFmpeg for Windows (example)
+// Add this to your build.gradle with: apply from: 'download-ffmpeg.gradle'
+
+import org.apache.tools.ant.taskdefs.condition.Os
+
+task downloadFFmpeg {
+    description = 'Downloads FFmpeg binary for the current platform'
+    
+    doLast {
+        def ffmpegDir = new File(projectDir, 'tools/ffmpeg')
+        ffmpegDir.mkdirs()
+        
+        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            def ffmpegZip = new File(ffmpegDir, 'ffmpeg.zip')
+            def ffmpegUrl = 'https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip'
+            
+            if (!ffmpegZip.exists()) {
+                println "Downloading FFmpeg for Windows..."
+                new URL(ffmpegUrl).withInputStream { i ->
+                    ffmpegZip.withOutputStream { it << i }
+                }
+                
+                println "Extracting FFmpeg..."
+                copy {
+                    from zipTree(ffmpegZip)
+                    into ffmpegDir
+                    // The zip contains a versioned folder, we need to handle that
+                    eachFile { fcd ->
+                        // Strip the first directory level
+                        fcd.relativePath = new RelativePath(true, fcd.relativePath.segments.drop(1))
+                    }
+                    includeEmptyDirs = false
+                }
+                
+                println "FFmpeg downloaded to: ${ffmpegDir.absolutePath}"
+                println "Add ${ffmpegDir.absolutePath}/bin to your PATH or run with:"
+                println "set PATH=%PATH%;${ffmpegDir.absolutePath}\\bin"
+            } else {
+                println "FFmpeg already downloaded"
+            }
+        } else {
+            println "Automatic download only supported for Windows"
+            println "Please install ffmpeg using your package manager:"
+            println "  Ubuntu/Debian: sudo apt-get install ffmpeg"
+            println "  MacOS: brew install ffmpeg"
+            println "  Fedora: sudo dnf install ffmpeg"
+        }
+    }
+}
+
+// Optionally make build depend on having FFmpeg
+// build.dependsOn downloadFFmpeg

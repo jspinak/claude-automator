@@ -3,6 +3,7 @@ package io.github.jspinak.claude.tools;
 import org.sikuli.basics.Settings;
 import org.sikuli.script.*;
 import io.github.jspinak.brobot.capture.PhysicalScreenCapture;
+import io.github.jspinak.brobot.capture.CrossPlatformPhysicalCapture;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -30,14 +31,20 @@ public class BrobotPatternComparisonTest {
     
     public static void main(String[] args) throws Exception {
         System.out.println("\n" + "=".repeat(80));
-        System.out.println("BROBOT PATTERN COMPARISON TEST");
+        System.out.println("BROBOT PATTERN COMPARISON TEST WITH FFMPEG");
         System.out.println("Comparing claude-prompt-3 and claude-prompt-win patterns");
-        System.out.println("with Brobot screenshots");
+        System.out.println("Testing FFmpeg capture for physical resolution");
         System.out.println("Time: " + dateFormat.format(new Date()));
         System.out.println("=".repeat(80));
         
-        // Check DPI and display settings
-        System.out.println("\n0. CHECKING DPI AWARENESS AND SETTINGS:");
+        // Check FFmpeg availability
+        System.out.println("\n0. CHECKING FFMPEG AND CAPTURE METHODS:");
+        System.out.println("-".repeat(70));
+        
+        // Check if FFmpeg is available
+        checkFFmpegAvailability();
+        
+        System.out.println("\n1. CHECKING DPI AWARENESS AND SETTINGS:");
         System.out.println("-".repeat(70));
         
         // Get actual screen dimensions from Java AWT
@@ -102,6 +109,18 @@ public class BrobotPatternComparisonTest {
             e.printStackTrace();
         }
         
+        // Method 6: Try CrossPlatformPhysicalCapture (which should use FFmpeg if available)
+        System.out.println("\n   Testing CrossPlatformPhysicalCapture (FFmpeg if available):");
+        try {
+            BufferedImage crossPlatformCapture = CrossPlatformPhysicalCapture.capture();
+            System.out.println("   CrossPlatformPhysicalCapture: " + crossPlatformCapture.getWidth() + "x" + crossPlatformCapture.getHeight());
+            File crossFile = saveImage(crossPlatformCapture, "cross_platform_capture");
+            System.out.println("   Saved as: " + (crossFile != null ? crossFile.getName() : "Failed"));
+            System.out.println("   (This should use FFmpeg if available, otherwise fallback)");
+        } catch (Exception e) {
+            System.out.println("   CrossPlatformPhysicalCapture failed: " + e.getMessage());
+        }
+        
         // Decide which capture method to use based on results
         Settings.AlwaysResize = 1.0f; // Start with default
         
@@ -150,10 +169,10 @@ public class BrobotPatternComparisonTest {
         File screenFile = saveImage(screenCapture, "brobot_screen_capture");
         System.out.println("   Saved as: " + (screenFile != null ? screenFile.getName() : "Failed to save"));
         
-        // Test patterns
+        // Test ONLY these two patterns as requested
         String[] patterns = {
-            "claude-prompt-3.png",
-            "claude-prompt-win.png"  // Windows-captured pattern
+            "claude-prompt-3.png",      // SikuliX captured pattern
+            "claude-prompt-win.png"      // Windows captured pattern
         };
         
         // Store results for comparison
@@ -525,5 +544,47 @@ public class BrobotPatternComparisonTest {
             System.err.println("Failed to save image: " + e.getMessage());
             return null;
         }
+    }
+    
+    private static void checkFFmpegAvailability() {
+        System.out.println("   Checking FFmpeg availability:");
+        
+        try {
+            // Try to run ffmpeg -version
+            Process process = Runtime.getRuntime().exec(new String[]{"ffmpeg", "-version"});
+            process.waitFor();
+            
+            if (process.exitValue() == 0) {
+                System.out.println("   ✅ FFmpeg is AVAILABLE");
+                System.out.println("   CrossPlatformPhysicalCapture should use FFmpeg for capture");
+                
+                // Try to get FFmpeg version
+                try {
+                    ProcessBuilder pb = new ProcessBuilder("ffmpeg", "-version");
+                    Process p = pb.start();
+                    java.io.BufferedReader reader = new java.io.BufferedReader(
+                        new java.io.InputStreamReader(p.getInputStream())
+                    );
+                    String line = reader.readLine();
+                    if (line != null) {
+                        System.out.println("   Version: " + line);
+                    }
+                } catch (Exception e) {
+                    // Ignore version check failure
+                }
+            } else {
+                System.out.println("   ❌ FFmpeg returned error code: " + process.exitValue());
+            }
+        } catch (Exception e) {
+            System.out.println("   ❌ FFmpeg is NOT available: " + e.getMessage());
+            System.out.println("   CrossPlatformPhysicalCapture will use fallback methods");
+        }
+        
+        // Also check which capture method Brobot will prefer
+        System.out.println("\n   Brobot capture method preference:");
+        System.out.println("   1. FFmpeg (if available) - best for physical resolution");
+        System.out.println("   2. ImageMagick (if available)");
+        System.out.println("   3. Platform-specific tools (screencapture, scrot)");
+        System.out.println("   4. Java Robot (fallback)");
     }
 }
