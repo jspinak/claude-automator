@@ -63,6 +63,12 @@ task runDiagnostic(type: JavaExec) {
     }
 }
 
+// Task for running simple diagnostic
+task runSimpleDiagnostic(type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.claude.automator.SimpleDiagnostic'
+}
+
 // Task to print classpath for external tools
 task printClasspath {
     doLast {
