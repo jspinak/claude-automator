@@ -175,6 +175,18 @@ public class ComprehensiveCaptureTest {
         System.out.println("   - Normal (SikuliX): " + normalCapture.getWidth() + "x" + normalCapture.getHeight());
         System.out.println("   - Adjusted/Physical: " + adjustedCapture.getWidth() + "x" + adjustedCapture.getHeight());
         
+        // Save both captures for visual inspection
+        File normalFile = saveCapture(normalCapture, "final_normal_capture");
+        File physicalFile = saveCapture(adjustedCapture, "final_physical_capture");
+        System.out.println("\n   📸 Saved captures for inspection:");
+        if (normalFile != null) System.out.println("   - Normal: " + normalFile.getName());
+        if (physicalFile != null) System.out.println("   - Physical: " + physicalFile.getName());
+        
+        // Check if physical capture is actually different or just black/empty
+        System.out.println("\n   🔍 Analyzing capture content:");
+        analyzeCapture(normalCapture, "Normal");
+        analyzeCapture(adjustedCapture, "Physical");
+        
         // Now test each pattern
         System.out.println("\n2. TESTING PATTERNS:");
         System.out.println("=" + "=".repeat(79));
@@ -218,6 +230,18 @@ public class ComprehensiveCaptureTest {
                 System.out.println("\n   TEST 2: On adjusted 1920x1080 capture:");
                 System.out.println("   Strategy: Use original pattern size for 1920x1080 capture");
                 testPatternOnCapture(screen, patternPath, adjustedCapture, "Adjusted", patternName);
+                
+                // Test 2B: Try scaled pattern on physical capture to verify theory
+                if (adjustedCapture.getWidth() == 1920) {
+                    System.out.println("\n   TEST 2B: Scaled pattern (1.25x) on 1920x1080 capture:");
+                    BufferedImage scaledForPhysical = resizeImage(patternImage, 
+                        (int)(patternImage.getWidth() * 1.25), 
+                        (int)(patternImage.getHeight() * 1.25));
+                    File scaledForPhysicalFile = saveCapture(scaledForPhysical, patternName.replace(".png", "_scaled_for_physical"));
+                    if (scaledForPhysicalFile != null) {
+                        testPatternOnCapture(screen, scaledForPhysicalFile.getAbsolutePath(), adjustedCapture, "Physical125", patternName + " (scaled 1.25)");
+                    }
+                }
                 
                 // Test 3: Pattern on physical capture (if different from adjusted)
                 if (physicalCapture != null && physicalCapture != adjustedCapture) {
@@ -688,6 +712,46 @@ public class ComprehensiveCaptureTest {
         } catch (Exception e) {
             System.err.println("Failed to capture screen: " + e.getMessage());
             return new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
+        }
+    }
+    
+    private static void analyzeCapture(BufferedImage image, String label) {
+        if (image == null) {
+            System.out.println("     " + label + ": NULL image!");
+            return;
+        }
+        
+        // Check if image is all black or all same color
+        int firstPixel = image.getRGB(0, 0);
+        boolean allSame = true;
+        int sampleSize = 100; // Sample pixels for performance
+        
+        for (int x = 0; x < image.getWidth() && allSame; x += image.getWidth() / sampleSize) {
+            for (int y = 0; y < image.getHeight() && allSame; y += image.getHeight() / sampleSize) {
+                if (image.getRGB(x, y) != firstPixel) {
+                    allSame = false;
+                }
+            }
+        }
+        
+        if (allSame) {
+            System.out.println("     " + label + ": WARNING - All pixels same color!");
+        } else {
+            // Calculate average brightness
+            long totalBrightness = 0;
+            int samples = 0;
+            for (int x = 0; x < image.getWidth(); x += image.getWidth() / sampleSize) {
+                for (int y = 0; y < image.getHeight(); y += image.getHeight() / sampleSize) {
+                    int rgb = image.getRGB(x, y);
+                    int r = (rgb >> 16) & 0xFF;
+                    int g = (rgb >> 8) & 0xFF;
+                    int b = rgb & 0xFF;
+                    totalBrightness += (r + g + b) / 3;
+                    samples++;
+                }
+            }
+            int avgBrightness = (int)(totalBrightness / samples);
+            System.out.println("     " + label + ": Valid content (avg brightness: " + avgBrightness + "/255)");
         }
     }
     
