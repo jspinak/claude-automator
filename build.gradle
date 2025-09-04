@@ -67,6 +67,8 @@ task runDiagnostic(type: JavaExec) {
 task runSimpleDiagnostic(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'com.claude.automator.SimpleDiagnostic'
+    standardOutput = System.out
+    errorOutput = System.err
 }
 
 // Task to print classpath for external tools
