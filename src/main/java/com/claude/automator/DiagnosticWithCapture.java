@@ -122,21 +122,37 @@ public class DiagnosticWithCapture {
             
             Match match = finder.next();
             double score = match.getScore();
-            Region matchRegion = new Region(match);
             
             System.out.printf("   FOUND at %s with similarity: %.4f%n", 
                 match.getTarget(), score);
+            System.out.printf("   Match bounds: x=%d, y=%d, w=%d, h=%d%n",
+                match.x, match.y, match.w, match.h);
             
-            // Capture the matched region
-            BufferedImage capture = screen.capture(matchRegion).getImage();
-            String timestamp = dateFormat.format(new Date());
-            String captureFileName = String.format("capture_%s_%s_sim%.3f.png", 
-                testName, timestamp, score);
-            File captureFile = new File(captureDir, captureFileName);
+            // Check if match has valid dimensions
+            if (match.w <= 0 || match.h <= 0) {
+                System.err.println("   ERROR: Invalid match dimensions (w=" + match.w + ", h=" + match.h + ")");
+                System.err.println("   This indicates pattern scaling resulted in zero-size match");
+                return match; // Return match for analysis but skip capture
+            }
             
-            ImageIO.write(capture, "png", captureFile);
-            System.out.println("   Captured match saved to: " + captureFileName);
-            System.out.println("   Captured size: " + capture.getWidth() + "x" + capture.getHeight());
+            try {
+                // Create region with explicit bounds checking
+                Region matchRegion = new Region(match.x, match.y, 
+                    Math.max(1, match.w), Math.max(1, match.h));
+                
+                // Capture the matched region
+                BufferedImage capture = screen.capture(matchRegion).getImage();
+                String timestamp = dateFormat.format(new Date());
+                String captureFileName = String.format("capture_%s_%s_sim%.3f.png", 
+                    testName, timestamp, score);
+                File captureFile = new File(captureDir, captureFileName);
+                
+                ImageIO.write(capture, "png", captureFile);
+                System.out.println("   Captured match saved to: " + captureFileName);
+                System.out.println("   Captured size: " + capture.getWidth() + "x" + capture.getHeight());
+            } catch (Exception captureError) {
+                System.err.println("   Failed to capture: " + captureError.getMessage());
+            }
             
             return match;
             
@@ -149,8 +165,15 @@ public class DiagnosticWithCapture {
     private static void compareToPatterns(Match match, BufferedImage originalPattern, 
                                          BufferedImage scaledPattern, File captureDir, String testName) {
         try {
+            // Check if match has valid dimensions
+            if (match == null || match.w <= 0 || match.h <= 0) {
+                System.err.println("   Cannot compare - invalid match dimensions");
+                return;
+            }
+            
             Screen screen = new Screen();
-            Region matchRegion = new Region(match);
+            Region matchRegion = new Region(match.x, match.y, 
+                Math.max(1, match.w), Math.max(1, match.h));
             BufferedImage capturedMatch = screen.capture(matchRegion).getImage();
             
             System.out.println("\n   === COMPARISON ANALYSIS ===");

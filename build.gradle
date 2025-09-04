@@ -95,6 +95,14 @@ task runCaptureDiagnostic(type: JavaExec) {
     errorOutput = System.err
 }
 
+// Task for running pattern size diagnostic
+task runSizeDiagnostic(type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.claude.automator.DiagnosticPatternSizes'
+    standardOutput = System.out
+    errorOutput = System.err
+}
+
 // Task to print classpath for external tools
 task printClasspath {
     doLast {
