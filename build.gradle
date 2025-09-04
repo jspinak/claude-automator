@@ -127,6 +127,14 @@ task runWindowsDiagnostic(type: JavaExec) {
     errorOutput = System.err
 }
 
+// Task for running physical resize diagnostic
+task runResizeDiagnostic(type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.claude.automator.DiagnosticPhysicalResize'
+    standardOutput = System.out
+    errorOutput = System.err
+}
+
 // Task to print classpath for external tools
 task printClasspath {
     doLast {
