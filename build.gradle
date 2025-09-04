@@ -135,6 +135,16 @@ task runResizeDiagnostic(type: JavaExec) {
     errorOutput = System.err
 }
 
+// Task for running comprehensive capture test
+task runCaptureTest(type: JavaExec) {
+    description = 'Tests Claude patterns on different capture resolutions'
+    group = 'diagnostics'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'io.github.jspinak.claude.tools.ComprehensiveCaptureTest'
+    standardOutput = System.out
+    errorOutput = System.err
+}
+
 // Task to print classpath for external tools
 task printClasspath {
     doLast {
