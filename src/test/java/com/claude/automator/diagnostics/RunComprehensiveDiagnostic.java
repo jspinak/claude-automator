@@ -91,7 +91,7 @@ public class RunComprehensiveDiagnostic {
         double[] resizeFactors = {1.0, 0.8, 0.667, 0.5};
         
         for (double factor : resizeFactors) {
-            Settings.AlwaysResize = factor;
+            Settings.AlwaysResize = (float) factor;
             System.out.println("\n\n================================================");
             System.out.println("Testing with Settings.AlwaysResize = " + factor);
             System.out.println("================================================");
