@@ -103,6 +103,14 @@ task runSizeDiagnostic(type: JavaExec) {
     errorOutput = System.err
 }
 
+// Task for running reverse match diagnostic
+task runReverseDiagnostic(type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.claude.automator.DiagnosticReverseMatch'
+    standardOutput = System.out
+    errorOutput = System.err
+}
+
 // Task to print classpath for external tools
 task printClasspath {
     doLast {
