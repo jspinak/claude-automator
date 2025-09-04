@@ -111,6 +111,14 @@ task runReverseDiagnostic(type: JavaExec) {
     errorOutput = System.err
 }
 
+// Task for running content analysis diagnostic
+task runContentDiagnostic(type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.claude.automator.DiagnosticContentAnalysis'
+    standardOutput = System.out
+    errorOutput = System.err
+}
+
 // Task to print classpath for external tools
 task printClasspath {
     doLast {
