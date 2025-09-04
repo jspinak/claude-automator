@@ -31,13 +31,52 @@ public class BrobotPatternComparisonTest {
         System.out.println("\n" + "=".repeat(80));
         System.out.println("BROBOT PATTERN COMPARISON TEST");
         System.out.println("Comparing claude-prompt-3 and claude-prompt-win patterns");
-        System.out.println("with Brobot screenshots at physical resolution");
+        System.out.println("with Brobot screenshots");
         System.out.println("Time: " + dateFormat.format(new Date()));
         System.out.println("=".repeat(80));
         
-        Screen screen = new Screen();
+        // Check DPI and display settings
+        System.out.println("\n0. CHECKING DPI AWARENESS AND SETTINGS:");
+        System.out.println("-".repeat(70));
         
-        // Ensure we're using physical resolution (DPI scaling disabled in Brobot)
+        // Get actual screen dimensions from Java AWT
+        GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+        int actualWidth = gd.getDisplayMode().getWidth();
+        int actualHeight = gd.getDisplayMode().getHeight();
+        System.out.println("   Java AWT Screen Resolution: " + actualWidth + "x" + actualHeight);
+        
+        // Check SikuliX Settings
+        System.out.println("   Settings.AlwaysResize (before): " + Settings.AlwaysResize);
+        
+        // Get screen from SikuliX
+        Screen screen = new Screen();
+        Rectangle bounds = screen.getBounds();
+        System.out.println("   SikuliX Screen Bounds: " + bounds.width + "x" + bounds.height);
+        
+        // Try to force physical resolution
+        System.out.println("\n   Testing different capture methods:");
+        
+        // Method 1: Default capture
+        Settings.AlwaysResize = 1.0f;
+        BufferedImage capture1 = captureFullScreen(screen);
+        System.out.println("   With AlwaysResize=1.0: " + capture1.getWidth() + "x" + capture1.getHeight());
+        
+        // Method 2: Try to get physical resolution
+        Settings.AlwaysResize = 1.25f; // 1.25 = 1/0.8 to compensate for 80% scaling
+        BufferedImage capture2 = captureFullScreen(screen);
+        System.out.println("   With AlwaysResize=1.25: " + capture2.getWidth() + "x" + capture2.getHeight());
+        
+        // Method 3: Direct Robot capture
+        try {
+            Robot robot = new Robot();
+            Rectangle screenRect = new Rectangle(0, 0, actualWidth, actualHeight);
+            BufferedImage robotCapture = robot.createScreenCapture(screenRect);
+            System.out.println("   Direct Robot capture: " + robotCapture.getWidth() + "x" + robotCapture.getHeight());
+        } catch (Exception e) {
+            System.out.println("   Direct Robot capture failed: " + e.getMessage());
+        }
+        
+        // Reset to default
         Settings.AlwaysResize = 1.0f;
         
         // Capture the current screen
@@ -45,7 +84,19 @@ public class BrobotPatternComparisonTest {
         System.out.println("-".repeat(70));
         BufferedImage screenCapture = captureFullScreen(screen);
         System.out.println("   Screen captured at: " + screenCapture.getWidth() + "x" + screenCapture.getHeight());
-        System.out.println("   (Physical resolution with DPI scaling disabled)");
+        
+        // Determine if we have physical resolution
+        if (screenCapture.getWidth() == 1920 && screenCapture.getHeight() == 1080) {
+            System.out.println("   ✅ Captured at PHYSICAL RESOLUTION (1920x1080)");
+        } else if (screenCapture.getWidth() == 1536 && screenCapture.getHeight() == 864) {
+            System.out.println("   ⚠️ Captured at SCALED RESOLUTION (1536x864 = 80% of 1920x1080)");
+            System.out.println("   DPI scaling appears to be ACTIVE (125% Windows scaling)");
+            System.out.println("   To get physical resolution, you may need to:");
+            System.out.println("   - Set Windows DPI awareness for Java process");
+            System.out.println("   - Or use Settings.AlwaysResize = 1.25");
+        } else {
+            System.out.println("   Resolution: " + screenCapture.getWidth() + "x" + screenCapture.getHeight());
+        }
         
         // Save the screen capture for reference
         File screenFile = saveImage(screenCapture, "brobot_screen_capture");
@@ -54,7 +105,7 @@ public class BrobotPatternComparisonTest {
         // Test patterns
         String[] patterns = {
             "claude-prompt-3.png",
-            "claude-prompt-from-windows-snipping.png"  // This is the "claude-prompt-win" pattern
+            "claude-prompt-win.png"  // Windows-captured pattern
         };
         
         // Store results for comparison
@@ -354,8 +405,7 @@ public class BrobotPatternComparisonTest {
         System.out.println("(Physical resolution with DPI scaling disabled)\n");
         
         for (int i = 0; i < patterns.length; i++) {
-            String displayName = patterns[i].equals("claude-prompt-from-windows-snipping.png") 
-                               ? "claude-prompt-win" : patterns[i].replace(".png", "");
+            String displayName = patterns[i].replace(".png", "");
             
             System.out.println(displayName + ":");
             if (similarities[i] > 0) {
