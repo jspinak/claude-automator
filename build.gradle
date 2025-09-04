@@ -79,6 +79,22 @@ task runDPIDiagnostic(type: JavaExec) {
     errorOutput = System.err
 }
 
+// Task for running diagnostic with similarity scores
+task runScoresDiagnostic(type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.claude.automator.DiagnosticWithScores'
+    standardOutput = System.out
+    errorOutput = System.err
+}
+
+// Task for running diagnostic with capture and comparison
+task runCaptureDiagnostic(type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.claude.automator.DiagnosticWithCapture'
+    standardOutput = System.out
+    errorOutput = System.err
+}
+
 // Task to print classpath for external tools
 task printClasspath {
     doLast {
