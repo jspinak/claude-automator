@@ -71,6 +71,14 @@ task runSimpleDiagnostic(type: JavaExec) {
     errorOutput = System.err
 }
 
+// Task for running diagnostic with DPI
+task runDPIDiagnostic(type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.claude.automator.DiagnosticWithDPI'
+    standardOutput = System.out
+    errorOutput = System.err
+}
+
 // Task to print classpath for external tools
 task printClasspath {
     doLast {
