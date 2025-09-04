@@ -65,13 +65,10 @@ public class ComprehensiveCaptureTest {
         
         Screen screen = new Screen();
         
-        // Test patterns - using Claude Automator specific images
+        // Test patterns - using only the two specified Claude Automator images
         String[] patterns = {
-            "claude-prompt-3.png",     // SikuliX capture
-            "claude-prompt-from-windows-snipping.png",    // Windows capture
-            "claude-prompt-3-80.png",   // 80% scaled
-            "claude-prompt-1.png",      // Additional pattern
-            "claude-prompt-2.png"       // Additional pattern
+            "claude-prompt-3.png",     // SikuliX capture pattern
+            "claude-prompt-win.png"    // Windows capture pattern
         };
         
         // First, capture the screen normally and at adjusted resolution
@@ -482,21 +479,21 @@ public class ComprehensiveCaptureTest {
         System.out.println("\nCreating side-by-side visual comparison:");
         
         try {
-            // Load the patterns
+            // Load the two test patterns
             File sikuliFile = new File(CLAUDE_PATH + "claude-prompt-3.png");
-            File windowsFile = new File(CLAUDE_PATH + "claude-prompt-from-windows-snipping.png");
-            File scaledFile = new File(CLAUDE_PATH + "claude-prompt-3-80.png");
+            File windowsFile = new File(CLAUDE_PATH + "claude-prompt-win.png");
+            File scaledFile = null; // Not using pre-scaled file anymore
             
             BufferedImage sikuliImg = sikuliFile.exists() ? ImageIO.read(sikuliFile) : null;
             BufferedImage windowsImg = windowsFile.exists() ? ImageIO.read(windowsFile) : null;
-            BufferedImage scaledImg = scaledFile.exists() ? ImageIO.read(scaledFile) : null;
+            BufferedImage scaledImg = null; // Not using pre-scaled file
             
             // Try to capture a match from screen
             BufferedImage capturedMatch = null;
             String capturedInfo = "Not found";
             
             // Try to find and capture any pattern
-            for (String patternName : new String[]{"claude-prompt-3.png", "claude-prompt-3-80.png"}) {
+            for (String patternName : new String[]{"claude-prompt-3.png", "claude-prompt-win.png"}) {
                 String patternPath = CLAUDE_PATH + patternName;
                 File f = new File(patternPath);
                 if (!f.exists()) continue;
@@ -521,18 +518,17 @@ public class ComprehensiveCaptureTest {
             int padding = 20;
             int labelHeight = 30;
             
-            // Calculate scaled dimensions
-            BufferedImage[] images = {sikuliImg, windowsImg, scaledImg, capturedMatch};
+            // Calculate scaled dimensions - only showing the two patterns and live capture
+            BufferedImage[] images = {sikuliImg, windowsImg, capturedMatch};
             String[] labels = {
-                sikuliImg != null ? String.format("SikuliX Original\n%dx%d", sikuliImg.getWidth(), sikuliImg.getHeight()) : "Not found",
-                windowsImg != null ? String.format("Windows Capture\n%dx%d", windowsImg.getWidth(), windowsImg.getHeight()) : "Not found",
-                scaledImg != null ? String.format("80%% Scaled\n%dx%d", scaledImg.getWidth(), scaledImg.getHeight()) : "Not found",
+                sikuliImg != null ? String.format("claude-prompt-3\n%dx%d", sikuliImg.getWidth(), sikuliImg.getHeight()) : "Not found",
+                windowsImg != null ? String.format("claude-prompt-win\n%dx%d", windowsImg.getWidth(), windowsImg.getHeight()) : "Not found",
                 capturedMatch != null ? "Live Capture\n" + capturedInfo : "Not found"
             };
             
             // Calculate total width
             int totalWidth = padding;
-            int[] widths = new int[4];
+            int[] widths = new int[3];
             for (int i = 0; i < images.length; i++) {
                 if (images[i] != null) {
                     double scale = (double)maxHeight / images[i].getHeight();
@@ -598,23 +594,20 @@ public class ComprehensiveCaptureTest {
             File comparisonFile = saveCapture(comparison, "visual_comparison");
             if (comparisonFile != null) {
                 System.out.println("   ✅ Saved visual comparison: " + comparisonFile.getName());
-                System.out.println("   Shows side-by-side: SikuliX | Windows | 80% Scaled | Live Capture");
+                System.out.println("   Shows side-by-side: claude-prompt-3 | claude-prompt-win | Live Capture");
             }
             
             // Print analysis
             System.out.println("\n   VISUAL ANALYSIS:");
             if (sikuliImg != null) {
-                System.out.println("   SikuliX pattern: " + sikuliImg.getWidth() + "x" + sikuliImg.getHeight());
+                System.out.println("   claude-prompt-3: " + sikuliImg.getWidth() + "x" + sikuliImg.getHeight());
             }
             if (windowsImg != null) {
-                System.out.println("   Windows pattern: " + windowsImg.getWidth() + "x" + windowsImg.getHeight());
+                System.out.println("   claude-prompt-win: " + windowsImg.getWidth() + "x" + windowsImg.getHeight());
                 if (sikuliImg != null) {
                     double ratio = (double)windowsImg.getWidth() / sikuliImg.getWidth();
-                    System.out.println("   Windows/SikuliX ratio: " + String.format("%.3f", ratio));
+                    System.out.println("   Win/SikuliX size ratio: " + String.format("%.3f", ratio));
                 }
-            }
-            if (scaledImg != null) {
-                System.out.println("   80% scaled: " + scaledImg.getWidth() + "x" + scaledImg.getHeight());
             }
             if (capturedMatch != null) {
                 System.out.println("   Live capture: " + capturedInfo);
@@ -646,7 +639,7 @@ public class ComprehensiveCaptureTest {
         // Analyze by pattern type
         System.out.println("\n📊 ANALYSIS BY PATTERN:");
         
-        for (String pattern : new String[]{"claude-prompt-3.png", "claude-prompt-from-windows-snipping.png", "claude-prompt-3-80.png"}) {
+        for (String pattern : new String[]{"claude-prompt-3.png", "claude-prompt-win.png"}) {
             System.out.println("\n   " + pattern + ":");
             
             results.stream()
