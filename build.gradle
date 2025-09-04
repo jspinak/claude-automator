@@ -119,6 +119,14 @@ task runContentDiagnostic(type: JavaExec) {
     errorOutput = System.err
 }
 
+// Task for running Windows capture diagnostic
+task runWindowsDiagnostic(type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.claude.automator.DiagnosticWindowsCapture'
+    standardOutput = System.out
+    errorOutput = System.err
+}
+
 // Task to print classpath for external tools
 task printClasspath {
     doLast {
