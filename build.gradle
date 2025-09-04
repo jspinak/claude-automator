@@ -155,6 +155,17 @@ task runPatternComparison(type: JavaExec) {
     errorOutput = System.err
 }
 
+// Task to test SikuliX resolution
+task runSikuliXResolution(type: JavaExec) {
+    description = 'Test to determine SikuliX resolution mode'
+    group = 'diagnostics'
+    dependsOn compileJava
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'io.github.jspinak.claude.tools.SikuliXResolutionTest'
+    standardOutput = System.out
+    errorOutput = System.err
+}
+
 // Task to print classpath for external tools
 task printClasspath {
     doLast {

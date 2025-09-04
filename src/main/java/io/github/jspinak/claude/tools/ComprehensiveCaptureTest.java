@@ -212,6 +212,17 @@ public class ComprehensiveCaptureTest {
                 BufferedImage patternImage = ImageIO.read(patternFile);
                 System.out.println("   Pattern dimensions: " + patternImage.getWidth() + "x" + patternImage.getHeight());
                 
+                // Analyze pattern to guess its original capture resolution
+                System.out.println("   Pattern analysis:");
+                if (patternName.contains("claude-prompt-3")) {
+                    // 195x80 scaled by 0.8 = 156x64 (matches well at 1536x864)
+                    // This means original might be 195/0.8 = 243x100
+                    System.out.println("     - If captured at 1536x864: should be ~156x64");
+                    System.out.println("     - If captured at 1920x1080: should be ~195x80");
+                    System.out.println("     - Actual size: " + patternImage.getWidth() + "x" + patternImage.getHeight());
+                    System.out.println("     - Best match: 0.8x scaled = pattern was likely from 1920x1080!");
+                }
+                
                 // For 1536x864 capture, scale patterns down by 0.8
                 // For 1920x1080 capture, use original size
                 
@@ -245,6 +256,12 @@ public class ComprehensiveCaptureTest {
                     if (scaledForPhysicalFile != null) {
                         testPatternOnCapture(screen, scaledForPhysicalFile.getAbsolutePath(), adjustedCapture, "Physical125", patternName + " (scaled 1.25)");
                     }
+                    
+                    // TEST 2C: Try ORIGINAL pattern but tell SikuliX it's at different DPI
+                    System.out.println("\n   TEST 2C: Original pattern on physical with DPI adjustment:");
+                    Settings.AlwaysResize = 1.25f; // Tell SikuliX to scale up the pattern
+                    testPatternOnCapture(screen, patternPath, adjustedCapture, "PhysicalDPI125", patternName + " (DPI 1.25)");
+                    Settings.AlwaysResize = 1.0f; // Reset
                 }
                 
                 // Test 3: Pattern on physical capture (if different from adjusted)
