@@ -2,6 +2,10 @@ package io.github.jspinak.claude.tools;
 
 import org.sikuli.basics.Settings;
 import org.sikuli.script.*;
+import io.github.jspinak.brobot.capture.JavaCVFFmpegCapture;
+import io.github.jspinak.brobot.capture.CrossPlatformPhysicalCapture;
+import io.github.jspinak.brobot.capture.PhysicalScreenCapture;
+import io.github.jspinak.brobot.capture.WindowsPhysicalCapture;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -74,24 +78,105 @@ public class ComprehensiveCaptureTest {
         System.out.println("\n1. CAPTURING SCREENS:");
         System.out.println("-".repeat(70));
         
-        // Normal Brobot capture (expected 1536x864 on WSL, 1920x1080 on Windows)
+        // Normal SikuliX capture (expected 1536x864 with DPI scaling)
         Settings.AlwaysResize = 1.0f;
-        BufferedImage normalCapture = captureFullScreen(screen, "normal");
-        System.out.println("   Normal capture: " + normalCapture.getWidth() + "x" + normalCapture.getHeight());
+        BufferedImage normalCapture = captureFullScreen(screen, "normal_sikuli");
+        System.out.println("   SikuliX capture: " + normalCapture.getWidth() + "x" + normalCapture.getHeight());
         
-        // Adjusted capture to 1920x1080
-        BufferedImage adjustedCapture = resizeImage(normalCapture, 1920, 1080);
-        File adjustedFile = saveCapture(adjustedCapture, "adjusted_1920x1080");
-        System.out.println("   Adjusted capture: " + adjustedCapture.getWidth() + "x" + adjustedCapture.getHeight());
+        // On Windows, try Windows-specific capture methods first
+        BufferedImage physicalCapture = null;
+        String os = System.getProperty("os.name").toLowerCase();
         
-        // Also try capturing with different AlwaysResize settings
-        Settings.AlwaysResize = 1.25f;
-        BufferedImage capture125 = captureFullScreen(screen, "resize_125");
-        System.out.println("   Capture with AlwaysResize=1.25: " + capture125.getWidth() + "x" + capture125.getHeight());
+        if (os.contains("win")) {
+            // Try Windows-specific physical capture (combines multiple methods)
+            try {
+                System.out.println("\n   Attempting WindowsPhysicalCapture (multi-strategy):");
+                physicalCapture = WindowsPhysicalCapture.capture();
+                System.out.println("   Windows Physical capture: " + physicalCapture.getWidth() + "x" + physicalCapture.getHeight());
+                saveCapture(physicalCapture, "windows_physical");
+            } catch (Exception e) {
+                System.out.println("   Windows Physical failed: " + e.getMessage());
+            }
+            
+            // Also try PowerShell directly
+            if (physicalCapture == null || physicalCapture.getWidth() < 1920) {
+                try {
+                    System.out.println("\n   Attempting PowerShell capture:");
+                    BufferedImage psCapture = WindowsPhysicalCapture.captureWithPowerShell();
+                    System.out.println("   PowerShell capture: " + psCapture.getWidth() + "x" + psCapture.getHeight());
+                    saveCapture(psCapture, "powershell");
+                    if (psCapture.getWidth() >= 1920) {
+                        physicalCapture = psCapture;
+                    }
+                } catch (Exception e) {
+                    System.out.println("   PowerShell failed: " + e.getMessage());
+                }
+            }
+        }
         
-        Settings.AlwaysResize = 0.8f;
-        BufferedImage capture80 = captureFullScreen(screen, "resize_80");
-        System.out.println("   Capture with AlwaysResize=0.8: " + capture80.getWidth() + "x" + capture80.getHeight());
+        // Try JavaCV FFmpeg capture (should get physical resolution)
+        if (physicalCapture == null || physicalCapture.getWidth() < 1920) {
+            try {
+                System.out.println("\n   Attempting JavaCV FFmpeg capture (bundled):");
+                BufferedImage jcvCapture = JavaCVFFmpegCapture.capture();
+                System.out.println("   JavaCV FFmpeg capture: " + jcvCapture.getWidth() + "x" + jcvCapture.getHeight());
+                saveCapture(jcvCapture, "javacv_physical");
+                if (jcvCapture.getWidth() >= 1920) {
+                    physicalCapture = jcvCapture;
+                }
+            } catch (Exception e) {
+                System.out.println("   JavaCV FFmpeg failed: " + e.getMessage());
+            }
+        }
+        
+        // Try CrossPlatformPhysicalCapture (will use best available method)
+        try {
+            System.out.println("\n   Attempting CrossPlatformPhysicalCapture:");
+            BufferedImage crossCapture = CrossPlatformPhysicalCapture.capture();
+            System.out.println("   CrossPlatform capture: " + crossCapture.getWidth() + "x" + crossCapture.getHeight());
+            saveCapture(crossCapture, "cross_platform");
+            
+            // Use this as physical capture if JavaCV failed
+            if (physicalCapture == null) {
+                physicalCapture = crossCapture;
+            }
+        } catch (Exception e) {
+            System.out.println("   CrossPlatform capture failed: " + e.getMessage());
+        }
+        
+        // Try PhysicalScreenCapture
+        try {
+            System.out.println("\n   Attempting PhysicalScreenCapture:");
+            BufferedImage physScreenCapture = PhysicalScreenCapture.capture();
+            System.out.println("   PhysicalScreen capture: " + physScreenCapture.getWidth() + "x" + physScreenCapture.getHeight());
+            saveCapture(physScreenCapture, "physical_screen");
+            
+            // Use this if we still don't have physical capture
+            if (physicalCapture == null) {
+                physicalCapture = physScreenCapture;
+            }
+        } catch (Exception e) {
+            System.out.println("   PhysicalScreen capture failed: " + e.getMessage());
+        }
+        
+        // Decide which capture to use for testing
+        BufferedImage adjustedCapture;
+        if (physicalCapture != null && physicalCapture.getWidth() == 1920 && physicalCapture.getHeight() == 1080) {
+            System.out.println("\n   ✅ Using PHYSICAL RESOLUTION capture (1920x1080)");
+            adjustedCapture = physicalCapture;
+        } else if (physicalCapture != null && physicalCapture.getWidth() > normalCapture.getWidth()) {
+            System.out.println("\n   ✅ Using higher resolution capture (" + physicalCapture.getWidth() + "x" + physicalCapture.getHeight() + ")");
+            adjustedCapture = physicalCapture;
+        } else {
+            // Fall back to resizing
+            System.out.println("\n   ⚠️ Physical capture methods didn't achieve 1920x1080");
+            System.out.println("   Falling back to resized capture");
+            adjustedCapture = resizeImage(normalCapture, 1920, 1080);
+        }
+        
+        System.out.println("\n   Final captures for testing:");
+        System.out.println("   - Normal (SikuliX): " + normalCapture.getWidth() + "x" + normalCapture.getHeight());
+        System.out.println("   - Adjusted/Physical: " + adjustedCapture.getWidth() + "x" + adjustedCapture.getHeight());
         
         // Now test each pattern
         System.out.println("\n2. TESTING PATTERNS:");
@@ -137,9 +222,11 @@ public class ComprehensiveCaptureTest {
                 System.out.println("   Strategy: Use original pattern size for 1920x1080 capture");
                 testPatternOnCapture(screen, patternPath, adjustedCapture, "Adjusted", patternName);
                 
-                // Test 3: Pattern on capture with AlwaysResize=1.25
-                System.out.println("\n   TEST 3: On capture with AlwaysResize=1.25:");
-                testPatternOnCapture(screen, patternPath, capture125, "Resize1.25", patternName);
+                // Test 3: Pattern on physical capture (if different from adjusted)
+                if (physicalCapture != null && physicalCapture != adjustedCapture) {
+                    System.out.println("\n   TEST 3: On physical capture:");
+                    testPatternOnCapture(screen, patternPath, physicalCapture, "Physical", patternName);
+                }
                 
                 // Test 4: Direct screen search (for comparison)
                 System.out.println("\n   TEST 4: Direct screen search:");
