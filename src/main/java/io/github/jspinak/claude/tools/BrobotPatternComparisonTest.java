@@ -93,12 +93,13 @@ public class BrobotPatternComparisonTest {
         // Method 5: Try Brobot's PhysicalScreenCapture
         System.out.println("\n   Testing Brobot's PhysicalScreenCapture:");
         try {
-            BufferedImage physicalCapture = PhysicalScreenCapture.capturePhysicalScreen();
+            BufferedImage physicalCapture = PhysicalScreenCapture.capture();
             System.out.println("   PhysicalScreenCapture: " + physicalCapture.getWidth() + "x" + physicalCapture.getHeight());
             File physFile = saveImage(physicalCapture, "brobot_physical_capture");
             System.out.println("   Saved as: " + (physFile != null ? physFile.getName() : "Failed"));
         } catch (Exception e) {
             System.out.println("   PhysicalScreenCapture failed: " + e.getMessage());
+            e.printStackTrace();
         }
         
         // Decide which capture method to use based on results
