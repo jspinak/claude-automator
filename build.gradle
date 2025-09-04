@@ -145,6 +145,16 @@ task runCaptureTest(type: JavaExec) {
     errorOutput = System.err
 }
 
+// Task for running Brobot pattern comparison test
+task runPatternComparison(type: JavaExec) {
+    description = 'Compares claude-prompt-3 and claude-prompt-win with Brobot screenshots'
+    group = 'diagnostics'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'io.github.jspinak.claude.tools.BrobotPatternComparisonTest'
+    standardOutput = System.out
+    errorOutput = System.err
+}
+
 // Task to print classpath for external tools
 task printClasspath {
     doLast {
