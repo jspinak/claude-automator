@@ -187,6 +187,10 @@ public class ComprehensiveCaptureTest {
         analyzeCapture(normalCapture, "Normal");
         analyzeCapture(adjustedCapture, "Physical");
         
+        // Compare if physical is just scaled version of normal
+        System.out.println("\n   🔬 Comparing captures:");
+        compareCaptures(normalCapture, adjustedCapture);
+        
         // Now test each pattern
         System.out.println("\n2. TESTING PATTERNS:");
         System.out.println("=" + "=".repeat(79));
@@ -712,6 +716,71 @@ public class ComprehensiveCaptureTest {
         } catch (Exception e) {
             System.err.println("Failed to capture screen: " + e.getMessage());
             return new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
+        }
+    }
+    
+    private static void compareCaptures(BufferedImage normal, BufferedImage physical) {
+        if (normal == null || physical == null) {
+            System.out.println("     Cannot compare - null image(s)");
+            return;
+        }
+        
+        // Check if physical is exactly 1.25x the size of normal
+        double widthRatio = (double)physical.getWidth() / normal.getWidth();
+        double heightRatio = (double)physical.getHeight() / normal.getHeight();
+        
+        System.out.println("     Size ratio: " + String.format("%.3f", widthRatio) + " x " + String.format("%.3f", heightRatio));
+        
+        if (Math.abs(widthRatio - 1.25) < 0.01 && Math.abs(heightRatio - 1.25) < 0.01) {
+            System.out.println("     ✓ Physical is exactly 1.25x the normal size");
+            
+            // Sample some pixels to see if content is just scaled
+            boolean contentMatches = true;
+            int mismatches = 0;
+            int samples = 0;
+            
+            for (int x = 100; x < normal.getWidth() - 100 && samples < 20; x += 100) {
+                for (int y = 100; y < normal.getHeight() - 100 && samples < 20; y += 100) {
+                    // Get pixel from normal capture
+                    int normalPixel = normal.getRGB(x, y);
+                    
+                    // Get corresponding pixel from physical capture (scaled position)
+                    int physX = (int)(x * 1.25);
+                    int physY = (int)(y * 1.25);
+                    int physicalPixel = physical.getRGB(physX, physY);
+                    
+                    // Compare pixels (allowing some tolerance for scaling artifacts)
+                    int normalR = (normalPixel >> 16) & 0xFF;
+                    int normalG = (normalPixel >> 8) & 0xFF;
+                    int normalB = normalPixel & 0xFF;
+                    
+                    int physR = (physicalPixel >> 16) & 0xFF;
+                    int physG = (physicalPixel >> 8) & 0xFF;
+                    int physB = physicalPixel & 0xFF;
+                    
+                    int diff = Math.abs(normalR - physR) + Math.abs(normalG - physG) + Math.abs(normalB - physB);
+                    
+                    if (diff > 30) { // Allow 10 per channel tolerance
+                        mismatches++;
+                        if (samples < 5) { // Report first few mismatches
+                            System.out.println("     Pixel mismatch at " + x + "," + y + 
+                                             " -> " + physX + "," + physY + 
+                                             " (diff: " + diff + ")");
+                        }
+                    }
+                    samples++;
+                }
+            }
+            
+            if (mismatches == 0) {
+                System.out.println("     ✓ Content appears to be perfectly scaled");
+            } else {
+                double mismatchPercent = (mismatches * 100.0) / samples;
+                System.out.println("     ⚠ Content differs: " + mismatches + "/" + samples + 
+                                 " samples (" + String.format("%.1f%%", mismatchPercent) + " mismatch)");
+            }
+        } else {
+            System.out.println("     ⚠ Size ratio is not 1.25x - captures are different!");
         }
     }
     
