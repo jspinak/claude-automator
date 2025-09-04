@@ -2,6 +2,7 @@ package io.github.jspinak.claude.tools;
 
 import org.sikuli.basics.Settings;
 import org.sikuli.script.*;
+import io.github.jspinak.brobot.capture.PhysicalScreenCapture;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -72,18 +73,64 @@ public class BrobotPatternComparisonTest {
             Rectangle screenRect = new Rectangle(0, 0, actualWidth, actualHeight);
             BufferedImage robotCapture = robot.createScreenCapture(screenRect);
             System.out.println("   Direct Robot capture: " + robotCapture.getWidth() + "x" + robotCapture.getHeight());
+            
+            // Save this for comparison
+            File robotFile = saveImage(robotCapture, "robot_direct_capture");
         } catch (Exception e) {
             System.out.println("   Direct Robot capture failed: " + e.getMessage());
         }
         
-        // Reset to default
-        Settings.AlwaysResize = 1.0f;
+        // Method 4: Try to capture at 1920x1080 explicitly
+        try {
+            Robot robot = new Robot();
+            Rectangle fullRect = new Rectangle(0, 0, 1920, 1080);
+            BufferedImage fullCapture = robot.createScreenCapture(fullRect);
+            System.out.println("   Robot 1920x1080 explicit: " + fullCapture.getWidth() + "x" + fullCapture.getHeight());
+        } catch (Exception e) {
+            System.out.println("   Robot 1920x1080 failed: " + e.getMessage());
+        }
+        
+        // Method 5: Try Brobot's PhysicalScreenCapture
+        System.out.println("\n   Testing Brobot's PhysicalScreenCapture:");
+        try {
+            BufferedImage physicalCapture = PhysicalScreenCapture.capturePhysicalScreen();
+            System.out.println("   PhysicalScreenCapture: " + physicalCapture.getWidth() + "x" + physicalCapture.getHeight());
+            File physFile = saveImage(physicalCapture, "brobot_physical_capture");
+            System.out.println("   Saved as: " + (physFile != null ? physFile.getName() : "Failed"));
+        } catch (Exception e) {
+            System.out.println("   PhysicalScreenCapture failed: " + e.getMessage());
+        }
+        
+        // Decide which capture method to use based on results
+        Settings.AlwaysResize = 1.0f; // Start with default
         
         // Capture the current screen
         System.out.println("\n1. CAPTURING SCREEN WITH BROBOT:");
         System.out.println("-".repeat(70));
+        
+        // First attempt with default settings
         BufferedImage screenCapture = captureFullScreen(screen);
-        System.out.println("   Screen captured at: " + screenCapture.getWidth() + "x" + screenCapture.getHeight());
+        System.out.println("   Default capture: " + screenCapture.getWidth() + "x" + screenCapture.getHeight());
+        
+        // If we got scaled resolution, try to get physical resolution
+        if (screenCapture.getWidth() == 1536 && screenCapture.getHeight() == 864) {
+            System.out.println("   Detected scaled capture, attempting physical resolution...");
+            
+            // Try with 1.25x scaling to compensate
+            Settings.AlwaysResize = 1.25f;
+            BufferedImage physicalCapture = captureFullScreen(screen);
+            System.out.println("   With compensation (1.25x): " + physicalCapture.getWidth() + "x" + physicalCapture.getHeight());
+            
+            // Use the larger capture if it worked
+            if (physicalCapture.getWidth() > screenCapture.getWidth()) {
+                screenCapture = physicalCapture;
+                System.out.println("   ✅ Using compensated capture for better resolution");
+            } else {
+                Settings.AlwaysResize = 1.0f; // Reset if it didn't help
+            }
+        }
+        
+        System.out.println("   Final capture resolution: " + screenCapture.getWidth() + "x" + screenCapture.getHeight());
         
         // Determine if we have physical resolution
         if (screenCapture.getWidth() == 1920 && screenCapture.getHeight() == 1080) {
