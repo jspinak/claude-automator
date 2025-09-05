@@ -126,9 +126,26 @@ public class ScreenshotComparisonTest {
             System.out.println("   ⚠ SikuliX IDE screenshot not found - please add sikulix-ide.png to screenshots folder");
         }
         
+        // Load screenshots from your new tool
+        File sikulixToolFile = new File(screenshotsDir, "sikulix-tool.png");
+        if (sikulixToolFile.exists()) {
+            screenshots.add(loadScreenshot("SikuliX Tool", sikulixToolFile));
+            System.out.println("   ✓ Loaded SikuliX Tool screenshot");
+        } else {
+            System.out.println("   ⚠ SikuliX Tool screenshot not found - please add sikulix-tool.png to screenshots folder");
+        }
+        
+        File robotToolFile = new File(screenshotsDir, "robot-tool.png");
+        if (robotToolFile.exists()) {
+            screenshots.add(loadScreenshot("Robot Tool", robotToolFile));
+            System.out.println("   ✓ Loaded Robot Tool screenshot");
+        } else {
+            System.out.println("   ⚠ Robot Tool screenshot not found - please add robot-tool.png to screenshots folder");
+        }
+        
         if (screenshots.size() < 2) {
             System.err.println("\n✗ Need at least 2 screenshots to compare!");
-            System.out.println("Please add windows.png and/or sikulix-ide.png to the screenshots folder");
+            System.out.println("Please add screenshots to the screenshots folder");
             return;
         }
         
@@ -139,6 +156,47 @@ public class ScreenshotComparisonTest {
         for (ScreenshotInfo info : screenshots) {
             analyzeScreenshot(info);
             printScreenshotInfo(info);
+        }
+        
+        // Special comparison between external tools if we have them
+        List<String> externalToolNames = List.of("Windows", "SikuliX IDE", "SikuliX Tool", "Robot Tool");
+        List<ScreenshotInfo> externalScreenshots = new ArrayList<>();
+        for (ScreenshotInfo info : screenshots) {
+            if (externalToolNames.contains(info.name)) {
+                externalScreenshots.add(info);
+            }
+        }
+        
+        if (externalScreenshots.size() >= 2) {
+            System.out.println("\n📊 EXTERNAL TOOLS COMPARISON:");
+            System.out.println("-".repeat(70));
+            for (int i = 0; i < externalScreenshots.size(); i++) {
+                for (int j = i + 1; j < externalScreenshots.size(); j++) {
+                    ScreenshotInfo tool1 = externalScreenshots.get(i);
+                    ScreenshotInfo tool2 = externalScreenshots.get(j);
+                    
+                    BufferedImage img1 = tool1.image;
+                    BufferedImage img2 = tool2.image;
+                    
+                    // Normalize if different resolutions
+                    if (img1.getWidth() != img2.getWidth() || img1.getHeight() != img2.getHeight()) {
+                        int targetWidth = Math.max(img1.getWidth(), img2.getWidth());
+                        int targetHeight = Math.max(img1.getHeight(), img2.getHeight());
+                        
+                        if (img1.getWidth() != targetWidth || img1.getHeight() != targetHeight) {
+                            img1 = scaleImage(img1, targetWidth, targetHeight);
+                        }
+                        if (img2.getWidth() != targetWidth || img2.getHeight() != targetHeight) {
+                            img2 = scaleImage(img2, targetWidth, targetHeight);
+                        }
+                    }
+                    
+                    double similarity = comparePixelsNormalized(img1, img2, tool1.name, tool2.name);
+                    System.out.println("   " + tool1.name + " vs " + tool2.name + ": " + 
+                                     String.format("%.1f%% similarity", similarity * 100));
+                }
+            }
+            System.out.println();
         }
         
         // 5. Compare screenshots and find most similar pair
@@ -667,9 +725,14 @@ public class ScreenshotComparisonTest {
         List<ScreenshotInfo> brobotMethods = new ArrayList<>();
         
         for (ScreenshotInfo info : screenshots) {
-            if (info.name.equals("Windows") || info.name.equals("SikuliX IDE")) {
+            if (info.name.equals("Windows") || 
+                info.name.equals("SikuliX IDE") || 
+                info.name.equals("SikuliX Tool") || 
+                info.name.equals("Robot Tool")) {
                 externalTools.add(info);
-            } else {
+            } else if (info.name.equals("SikuliX") || 
+                       info.name.equals("Robot") || 
+                       info.name.equals("FFmpeg")) {
                 brobotMethods.add(info);
             }
         }
@@ -723,9 +786,52 @@ public class ScreenshotComparisonTest {
             System.out.println("   🤖 Brobot Method: " + bestBrobotMethod.name);
             System.out.println("   ✨ Similarity: " + String.format("%.1f%%", bestPairingSimilarity * 100));
             System.out.println();
+            
+            // Show tool details if using new tool
+            if (bestExternalTool.name.contains("Tool")) {
+                System.out.println("   📌 Tool Details:");
+                System.out.println("      " + bestExternalTool.name + " resolution: " + 
+                                 bestExternalTool.width + "x" + bestExternalTool.height);
+                System.out.println("      Compression ratio: " + String.format("%.1fx", bestExternalTool.compressionRatio));
+                System.out.println();
+            }
+            
             System.out.println("   RECOMMENDATION:");
             System.out.println("   ✅ Create patterns using: " + bestExternalTool.name);
             System.out.println("   ✅ Configure Brobot to use: " + bestBrobotMethod.name + " capture method");
+            
+            // Compare with Windows/SikuliX IDE baseline if new tool is best
+            if (bestExternalTool.name.contains("Tool")) {
+                System.out.println();
+                System.out.println("   📊 COMPARISON WITH TRADITIONAL TOOLS:");
+                for (ScreenshotInfo external : externalTools) {
+                    if (external.name.equals("Windows") || external.name.equals("SikuliX IDE")) {
+                        for (ScreenshotInfo brobot : brobotMethods) {
+                            if (brobot == bestBrobotMethod) {
+                                BufferedImage img1 = external.image;
+                                BufferedImage img2 = brobot.image;
+                                
+                                // Normalize if needed
+                                if (img1.getWidth() != img2.getWidth() || img1.getHeight() != img2.getHeight()) {
+                                    int targetWidth = Math.max(img1.getWidth(), img2.getWidth());
+                                    int targetHeight = Math.max(img1.getHeight(), img2.getHeight());
+                                    
+                                    if (img1.getWidth() != targetWidth || img1.getHeight() != targetHeight) {
+                                        img1 = scaleImage(img1, targetWidth, targetHeight);
+                                    }
+                                    if (img2.getWidth() != targetWidth || img2.getHeight() != targetHeight) {
+                                        img2 = scaleImage(img2, targetWidth, targetHeight);
+                                    }
+                                }
+                                
+                                double altSimilarity = comparePixelsNormalized(img1, img2, external.name, brobot.name);
+                                System.out.println("      " + external.name + " + " + brobot.name + 
+                                                 ": " + String.format("%.1f%%", altSimilarity * 100));
+                            }
+                        }
+                    }
+                }
+            }
             System.out.println();
             
         } else {

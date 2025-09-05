@@ -188,6 +188,17 @@ task testFFmpegConfig(type: JavaExec) {
     errorOutput = System.err
 }
 
+// Task to test FFmpeg configuration with Spring context
+task testFFmpegSpring(type: JavaExec) {
+    description = 'Test FFmpeg configuration with Spring context loaded'
+    group = 'diagnostics'
+    dependsOn compileJava
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'io.github.jspinak.claude.tools.TestFFmpegConfigSpring'
+    standardOutput = System.out
+    errorOutput = System.err
+}
+
 // Task to print classpath for external tools
 task printClasspath {
     doLast {
