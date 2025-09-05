@@ -149,10 +149,26 @@ public class ScreenshotComparisonTest {
         ScreenshotInfo bestPair1 = null;
         ScreenshotInfo bestPair2 = null;
         
+        // Store all similarities for later use
+        class PairSimilarity {
+            ScreenshotInfo first;
+            ScreenshotInfo second;
+            double similarity;
+            
+            PairSimilarity(ScreenshotInfo first, ScreenshotInfo second, double similarity) {
+                this.first = first;
+                this.second = second;
+                this.similarity = similarity;
+            }
+        }
+        
+        List<PairSimilarity> allPairs = new ArrayList<>();
+        
         if (screenshots.size() >= 2) {
             for (int i = 0; i < screenshots.size(); i++) {
                 for (int j = i + 1; j < screenshots.size(); j++) {
                     double similarity = compareScreenshots(screenshots.get(i), screenshots.get(j));
+                    allPairs.add(new PairSimilarity(screenshots.get(i), screenshots.get(j), similarity));
                     
                     if (similarity > bestSimilarity) {
                         bestSimilarity = similarity;
@@ -162,33 +178,78 @@ public class ScreenshotComparisonTest {
                 }
             }
             
-            System.out.println("\n🏆 MOST SIMILAR PAIR:");
+            // Find best pairing between external tools and Brobot methods
+            System.out.println("\n🏆 BEST PAIRING FOR PATTERN MATCHING:");
             System.out.println("=" + "=".repeat(79));
+            
+            // Find the best external-Brobot pairing
+            double bestExternalPairingSimilarity = 0;
+            ScreenshotInfo bestExternalTool = null;
+            ScreenshotInfo bestBrobotMethod = null;
+            
+            // Check all pairs for external-Brobot combinations
+            for (PairSimilarity pair : allPairs) {
+                boolean isFirstExternal = pair.first.name.equals("Windows") || pair.first.name.equals("SikuliX IDE");
+                boolean isSecondExternal = pair.second.name.equals("Windows") || pair.second.name.equals("SikuliX IDE");
+                boolean isFirstBrobot = pair.first.name.equals("SikuliX") || pair.first.name.equals("Robot") || pair.first.name.equals("FFmpeg");
+                boolean isSecondBrobot = pair.second.name.equals("SikuliX") || pair.second.name.equals("Robot") || pair.second.name.equals("FFmpeg");
+                
+                // Check if this is an external-Brobot pairing
+                if ((isFirstExternal && isSecondBrobot) || (isFirstBrobot && isSecondExternal)) {
+                    if (pair.similarity > bestExternalPairingSimilarity) {
+                        bestExternalPairingSimilarity = pair.similarity;
+                        
+                        if (isFirstExternal) {
+                            bestExternalTool = pair.first;
+                            bestBrobotMethod = pair.second;
+                        } else {
+                            bestExternalTool = pair.second;
+                            bestBrobotMethod = pair.first;
+                        }
+                    }
+                }
+            }
+            
+            if (bestExternalTool != null && bestBrobotMethod != null) {
+                System.out.println("\n   🎯 OPTIMAL PAIRING:");
+                System.out.println("   Pattern Capture Tool: " + bestExternalTool.name);
+                System.out.println("   Brobot Method: " + bestBrobotMethod.name);
+                System.out.println("   Similarity: " + String.format("%.1f%%", bestExternalPairingSimilarity * 100));
+                
+                System.out.println("\n   📋 RECOMMENDATION:");
+                System.out.println("   1. Capture patterns using: " + bestExternalTool.name);
+                if (bestExternalTool.name.equals("Windows")) {
+                    System.out.println("      (Windows Snipping Tool or Print Screen)");
+                } else {
+                    System.out.println("      (SikuliX IDE screenshot tool)");
+                }
+                
+                System.out.println("\n   2. Configure Brobot to use: " + bestBrobotMethod.name);
+                if (bestBrobotMethod.name.equals("SikuliX")) {
+                    System.out.println("      (Default - uses Screen.capture())");
+                } else if (bestBrobotMethod.name.equals("Robot")) {
+                    System.out.println("      (Java Robot - Robot.createScreenCapture())");
+                } else if (bestBrobotMethod.name.equals("FFmpeg")) {
+                    System.out.println("      (JavaCV FFmpeg - physical resolution capture)");
+                }
+                
+                System.out.println("\n   ✅ This pairing will give you the best pattern matching results!");
+                
+                // Additional info about resolution handling
+                if (bestExternalTool.width != bestBrobotMethod.width) {
+                    System.out.println("\n   ⚠️ Note: Resolution difference detected");
+                    System.out.println("      " + bestExternalTool.name + ": " + bestExternalTool.width + "x" + bestExternalTool.height);
+                    System.out.println("      " + bestBrobotMethod.name + ": " + bestBrobotMethod.width + "x" + bestBrobotMethod.height);
+                    System.out.println("      Pattern scaling may be needed (use Settings.AlwaysResize)");
+                }
+            }
+            
+            // Still show the overall most similar pair for reference
+            System.out.println("\n\n📊 OVERALL MOST SIMILAR PAIR (for reference):");
+            System.out.println("-".repeat(70));
             if (bestPair1 != null && bestPair2 != null) {
                 System.out.println("   " + bestPair1.name + " and " + bestPair2.name);
                 System.out.println("   Similarity: " + String.format("%.1f%%", bestSimilarity * 100));
-                System.out.println("\n   RECOMMENDATION:");
-                System.out.println("   Use these capture methods for consistent pattern matching!");
-                
-                // Check if it's a Brobot method
-                boolean isBrobotMethod1 = bestPair1.name.equals("SikuliX") || 
-                                         bestPair1.name.equals("Robot") || 
-                                         bestPair1.name.equals("FFmpeg");
-                boolean isBrobotMethod2 = bestPair2.name.equals("SikuliX") || 
-                                         bestPair2.name.equals("Robot") || 
-                                         bestPair2.name.equals("FFmpeg");
-                
-                if (isBrobotMethod1 && !isBrobotMethod2) {
-                    System.out.println("   → Capture patterns with: " + bestPair2.name);
-                    System.out.println("   → Use Brobot method: " + bestPair1.name);
-                } else if (!isBrobotMethod1 && isBrobotMethod2) {
-                    System.out.println("   → Capture patterns with: " + bestPair1.name);
-                    System.out.println("   → Use Brobot method: " + bestPair2.name);
-                } else if (isBrobotMethod1 && isBrobotMethod2) {
-                    System.out.println("   → Both are Brobot methods - excellent compatibility!");
-                } else {
-                    System.out.println("   → External tools have good compatibility");
-                }
             }
         }
         
