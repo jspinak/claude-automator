@@ -166,6 +166,17 @@ task runSikuliXResolution(type: JavaExec) {
     errorOutput = System.err
 }
 
+// Task to compare screenshot methods
+task runScreenshotComparison(type: JavaExec) {
+    description = 'Compare Brobot vs Windows vs SikuliX IDE screenshots'
+    group = 'diagnostics'
+    dependsOn compileJava
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'io.github.jspinak.claude.tools.ScreenshotComparisonTest'
+    standardOutput = System.out
+    errorOutput = System.err
+}
+
 // Task to print classpath for external tools
 task printClasspath {
     doLast {
