@@ -143,6 +143,14 @@ public class ScreenshotComparisonTest {
             System.out.println("   ⚠ Robot Tool screenshot not found - please add robot-tool.png to screenshots folder");
         }
         
+        File ffmpegToolFile = new File(screenshotsDir, "ffmpeg-tool.png");
+        if (ffmpegToolFile.exists()) {
+            screenshots.add(loadScreenshot("FFmpeg Tool", ffmpegToolFile));
+            System.out.println("   ✓ Loaded FFmpeg Tool screenshot");
+        } else {
+            System.out.println("   ⚠ FFmpeg Tool screenshot not found - please add ffmpeg-tool.png to screenshots folder");
+        }
+        
         if (screenshots.size() < 2) {
             System.err.println("\n✗ Need at least 2 screenshots to compare!");
             System.out.println("Please add screenshots to the screenshots folder");
@@ -159,7 +167,7 @@ public class ScreenshotComparisonTest {
         }
         
         // Special comparison between external tools if we have them
-        List<String> externalToolNames = List.of("Windows", "SikuliX IDE", "SikuliX Tool", "Robot Tool");
+        List<String> externalToolNames = List.of("Windows", "SikuliX IDE", "SikuliX Tool", "Robot Tool", "FFmpeg Tool");
         List<ScreenshotInfo> externalScreenshots = new ArrayList<>();
         for (ScreenshotInfo info : screenshots) {
             if (externalToolNames.contains(info.name)) {
@@ -728,7 +736,8 @@ public class ScreenshotComparisonTest {
             if (info.name.equals("Windows") || 
                 info.name.equals("SikuliX IDE") || 
                 info.name.equals("SikuliX Tool") || 
-                info.name.equals("Robot Tool")) {
+                info.name.equals("Robot Tool") ||
+                info.name.equals("FFmpeg Tool")) {
                 externalTools.add(info);
             } else if (info.name.equals("SikuliX") || 
                        info.name.equals("Robot") || 
