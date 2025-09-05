@@ -177,6 +177,17 @@ task runScreenshotComparison(type: JavaExec) {
     errorOutput = System.err
 }
 
+// Task to test FFmpeg configuration
+task testFFmpegConfig(type: JavaExec) {
+    description = 'Test FFmpeg capture configuration and pattern scaling settings'
+    group = 'diagnostics'
+    dependsOn compileJava
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'io.github.jspinak.claude.tools.TestFFmpegConfig'
+    standardOutput = System.out
+    errorOutput = System.err
+}
+
 // Task to print classpath for external tools
 task printClasspath {
     doLast {
