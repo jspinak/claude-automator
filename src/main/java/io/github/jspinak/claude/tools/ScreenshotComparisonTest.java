@@ -178,73 +178,9 @@ public class ScreenshotComparisonTest {
                 }
             }
             
-            // Find best pairing between external tools and Brobot methods
-            System.out.println("\n🏆 BEST PAIRING FOR PATTERN MATCHING:");
-            System.out.println("=" + "=".repeat(79));
+            // Pairing analysis moved to recommendations section
             
-            // Find the best external-Brobot pairing
-            double bestExternalPairingSimilarity = 0;
-            ScreenshotInfo bestExternalTool = null;
-            ScreenshotInfo bestBrobotMethod = null;
-            
-            // Check all pairs for external-Brobot combinations
-            for (PairSimilarity pair : allPairs) {
-                boolean isFirstExternal = pair.first.name.equals("Windows") || pair.first.name.equals("SikuliX IDE");
-                boolean isSecondExternal = pair.second.name.equals("Windows") || pair.second.name.equals("SikuliX IDE");
-                boolean isFirstBrobot = pair.first.name.equals("SikuliX") || pair.first.name.equals("Robot") || pair.first.name.equals("FFmpeg");
-                boolean isSecondBrobot = pair.second.name.equals("SikuliX") || pair.second.name.equals("Robot") || pair.second.name.equals("FFmpeg");
-                
-                // Check if this is an external-Brobot pairing
-                if ((isFirstExternal && isSecondBrobot) || (isFirstBrobot && isSecondExternal)) {
-                    if (pair.similarity > bestExternalPairingSimilarity) {
-                        bestExternalPairingSimilarity = pair.similarity;
-                        
-                        if (isFirstExternal) {
-                            bestExternalTool = pair.first;
-                            bestBrobotMethod = pair.second;
-                        } else {
-                            bestExternalTool = pair.second;
-                            bestBrobotMethod = pair.first;
-                        }
-                    }
-                }
-            }
-            
-            if (bestExternalTool != null && bestBrobotMethod != null) {
-                System.out.println("\n   🎯 OPTIMAL PAIRING:");
-                System.out.println("   Pattern Capture Tool: " + bestExternalTool.name);
-                System.out.println("   Brobot Method: " + bestBrobotMethod.name);
-                System.out.println("   Similarity: " + String.format("%.1f%%", bestExternalPairingSimilarity * 100));
-                
-                System.out.println("\n   📋 RECOMMENDATION:");
-                System.out.println("   1. Capture patterns using: " + bestExternalTool.name);
-                if (bestExternalTool.name.equals("Windows")) {
-                    System.out.println("      (Windows Snipping Tool or Print Screen)");
-                } else {
-                    System.out.println("      (SikuliX IDE screenshot tool)");
-                }
-                
-                System.out.println("\n   2. Configure Brobot to use: " + bestBrobotMethod.name);
-                if (bestBrobotMethod.name.equals("SikuliX")) {
-                    System.out.println("      (Default - uses Screen.capture())");
-                } else if (bestBrobotMethod.name.equals("Robot")) {
-                    System.out.println("      (Java Robot - Robot.createScreenCapture())");
-                } else if (bestBrobotMethod.name.equals("FFmpeg")) {
-                    System.out.println("      (JavaCV FFmpeg - physical resolution capture)");
-                }
-                
-                System.out.println("\n   ✅ This pairing will give you the best pattern matching results!");
-                
-                // Additional info about resolution handling
-                if (bestExternalTool.width != bestBrobotMethod.width) {
-                    System.out.println("\n   ⚠️ Note: Resolution difference detected");
-                    System.out.println("      " + bestExternalTool.name + ": " + bestExternalTool.width + "x" + bestExternalTool.height);
-                    System.out.println("      " + bestBrobotMethod.name + ": " + bestBrobotMethod.width + "x" + bestBrobotMethod.height);
-                    System.out.println("      Pattern scaling may be needed (use Settings.AlwaysResize)");
-                }
-            }
-            
-            // Still show the overall most similar pair for reference
+            // Show the overall most similar pair for reference
             System.out.println("\n\n📊 OVERALL MOST SIMILAR PAIR (for reference):");
             System.out.println("-".repeat(70));
             if (bestPair1 != null && bestPair2 != null) {
@@ -726,40 +662,109 @@ public class ScreenshotComparisonTest {
     private static void provideRecommendations(List<ScreenshotInfo> screenshots) {
         System.out.println("\nBased on the analysis:\n");
         
-        ScreenshotInfo best = null;
-        double bestScore = 0;
+        // Separate external tools from Brobot methods
+        List<ScreenshotInfo> externalTools = new ArrayList<>();
+        List<ScreenshotInfo> brobotMethods = new ArrayList<>();
         
         for (ScreenshotInfo info : screenshots) {
-            double score = 0;
-            
-            // Score based on file size (smaller is better for storage)
-            score += 50.0 * (1.0 - (double)info.fileSize / (2 * 1024 * 1024)); // Normalize to 2MB
-            
-            // Score based on unique colors (more is better for accuracy)
-            score += 30.0 * Math.min(1.0, info.uniqueColors / 10000.0);
-            
-            // Score based on compression ratio (moderate is better)
-            double idealCompression = 10.0;
-            score += 20.0 * (1.0 - Math.abs(info.compressionRatio - idealCompression) / idealCompression);
-            
-            if (score > bestScore) {
-                bestScore = score;
-                best = info;
+            if (info.name.equals("Windows") || info.name.equals("SikuliX IDE")) {
+                externalTools.add(info);
+            } else {
+                brobotMethods.add(info);
             }
-            
-            System.out.println("   " + info.name + " score: " + String.format("%.1f", score));
         }
         
-        if (best != null) {
-            System.out.println("\n   🏆 RECOMMENDED: " + best.name);
-            System.out.println("   Reasons:");
-            System.out.println("   - Good balance of file size and quality");
-            System.out.println("   - Sufficient color accuracy");
-            System.out.println("   - Reasonable compression");
+        // Find best pairing if we have both external tools and Brobot methods
+        if (!externalTools.isEmpty() && !brobotMethods.isEmpty()) {
+            System.out.println("   🎯 FINDING OPTIMAL EXTERNAL TOOL + BROBOT METHOD PAIRING:");
+            System.out.println("   " + "-".repeat(70));
+            
+            double bestPairingSimilarity = 0;
+            ScreenshotInfo bestExternalTool = null;
+            ScreenshotInfo bestBrobotMethod = null;
+            
+            // Compare each external tool with each Brobot method
+            for (ScreenshotInfo external : externalTools) {
+                for (ScreenshotInfo brobot : brobotMethods) {
+                    // Normalize images to same resolution for comparison
+                    BufferedImage img1 = external.image;
+                    BufferedImage img2 = brobot.image;
+                    
+                    if (img1.getWidth() != img2.getWidth() || img1.getHeight() != img2.getHeight()) {
+                        // Scale to common resolution
+                        int targetWidth = Math.max(img1.getWidth(), img2.getWidth());
+                        int targetHeight = Math.max(img1.getHeight(), img2.getHeight());
+                        
+                        if (img1.getWidth() != targetWidth || img1.getHeight() != targetHeight) {
+                            img1 = scaleImage(img1, targetWidth, targetHeight);
+                        }
+                        if (img2.getWidth() != targetWidth || img2.getHeight() != targetHeight) {
+                            img2 = scaleImage(img2, targetWidth, targetHeight);
+                        }
+                    }
+                    
+                    double similarity = comparePixelsNormalized(img1, img2, external.name, brobot.name);
+                    
+                    System.out.println("   " + external.name + " + " + brobot.name + 
+                                     ": " + String.format("%.1f%%", similarity * 100));
+                    
+                    if (similarity > bestPairingSimilarity) {
+                        bestPairingSimilarity = similarity;
+                        bestExternalTool = external;
+                        bestBrobotMethod = brobot;
+                    }
+                }
+            }
+            
+            System.out.println();
+            System.out.println("   🏆 OPTIMAL PAIRING FOR PATTERN MATCHING:");
+            System.out.println("   " + "=".repeat(70));
+            System.out.println("   📷 Pattern Capture Tool: " + bestExternalTool.name);
+            System.out.println("   🤖 Brobot Method: " + bestBrobotMethod.name);
+            System.out.println("   ✨ Similarity: " + String.format("%.1f%%", bestPairingSimilarity * 100));
+            System.out.println();
+            System.out.println("   RECOMMENDATION:");
+            System.out.println("   ✅ Create patterns using: " + bestExternalTool.name);
+            System.out.println("   ✅ Configure Brobot to use: " + bestBrobotMethod.name + " capture method");
+            System.out.println();
+            
+        } else {
+            // Fallback to old scoring system if we don't have both types
+            ScreenshotInfo best = null;
+            double bestScore = 0;
+            
+            for (ScreenshotInfo info : screenshots) {
+                double score = 0;
+                
+                // Score based on file size (smaller is better for storage)
+                score += 50.0 * (1.0 - (double)info.fileSize / (2 * 1024 * 1024)); // Normalize to 2MB
+                
+                // Score based on unique colors (more is better for accuracy)
+                score += 30.0 * Math.min(1.0, info.uniqueColors / 10000.0);
+                
+                // Score based on compression ratio (moderate is better)
+                double idealCompression = 10.0;
+                score += 20.0 * (1.0 - Math.abs(info.compressionRatio - idealCompression) / idealCompression);
+                
+                if (score > bestScore) {
+                    bestScore = score;
+                    best = info;
+                }
+                
+                System.out.println("   " + info.name + " score: " + String.format("%.1f", score));
+            }
+            
+            if (best != null) {
+                System.out.println("\n   🏆 RECOMMENDED: " + best.name);
+                System.out.println("   Reasons:");
+                System.out.println("   - Good balance of file size and quality");
+                System.out.println("   - Sufficient color accuracy");
+                System.out.println("   - Reasonable compression");
+            }
         }
         
         // Pattern matching compatibility
-        System.out.println("\n   PATTERN MATCHING COMPATIBILITY:");
+        System.out.println("   PATTERN MATCHING COMPATIBILITY:");
         boolean allSimilar = true;
         for (int i = 0; i < screenshots.size(); i++) {
             for (int j = i + 1; j < screenshots.size(); j++) {
