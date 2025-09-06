@@ -47,8 +47,8 @@ echo Copying native libraries...
 
 REM Copy opencv_java490.dll specifically
 if exist "opencv-extract\org\bytedeco\opencv\windows-x86_64\opencv_java490.dll" (
-    copy "opencv-extract\org\bytedeco\opencv\windows-x86_64\*.dll" "lib\" /Y
-    copy "opencv-extract\org\bytedeco\opencv\windows-x86_64\*.dll" "lib\natives\windows-x86_64\" /Y
+    xcopy "opencv-extract\org\bytedeco\opencv\windows-x86_64\*.dll" "lib\" /Y /Q
+    xcopy "opencv-extract\org\bytedeco\opencv\windows-x86_64\*.dll" "lib\natives\windows-x86_64\" /Y /Q
     copy "opencv-extract\org\bytedeco\opencv\windows-x86_64\opencv_java490.dll" "%JAVA_HOME%\bin\" /Y
     
     REM Also copy to system directories (requires admin)
@@ -71,9 +71,9 @@ if exist "openblas-windows.jar" (
     powershell -Command "Expand-Archive -Path 'openblas-windows.zip' -DestinationPath 'openblas-extract' -Force"
     del openblas-windows.zip
     
-    if exist "openblas-extract\org\bytedeco\openblas\windows-x86_64\*.dll" (
-        copy "openblas-extract\org\bytedeco\openblas\windows-x86_64\*.dll" "lib\" /Y
-        copy "openblas-extract\org\bytedeco\openblas\windows-x86_64\*.dll" "lib\natives\windows-x86_64\" /Y
+    if exist "openblas-extract\org\bytedeco\openblas\windows-x86_64\" (
+        xcopy "openblas-extract\org\bytedeco\openblas\windows-x86_64\*.dll" "lib\" /Y /Q
+        xcopy "openblas-extract\org\bytedeco\openblas\windows-x86_64\*.dll" "lib\natives\windows-x86_64\" /Y /Q
     )
 )
 
