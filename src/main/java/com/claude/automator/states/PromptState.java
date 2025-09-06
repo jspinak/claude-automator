@@ -24,7 +24,8 @@ public class PromptState {
     
     public PromptState() {
         // Create search region for lower left quarter of screen
-        // This adapts to any screen resolution
+        // RegionBuilder now automatically uses ScreenResolutionManager
+        // to ensure regions match the capture coordinate space
         Region lowerLeftQuarter = Region.builder()
             .withScreenPercentage(0.0, 0.5, 0.5, 0.5)  // x=0%, y=50%, width=50%, height=50%
             .build();
@@ -39,11 +40,11 @@ public class PromptState {
         
         // Initialize the claude prompt image with search region and ActionHistory
         // The ActionHistory is required for mock mode finds to work
-        // Using scaled patterns for logical resolution (1536x864) compatibility
+        // Using original patterns since regions are now in capture coordinate space
         claudePrompt = new StateImage.Builder()
             .addPatterns(
-                // Scaled patterns for logical resolution
-                "prompt/windows-scaled", "prompt/ffmpeg-scaled"
+                // Original patterns - regions now match capture resolution
+                "prompt/windows", "prompt/ffmpeg"
             )
             .setName("ClaudePrompt")
             .setSearchRegionForAllPatterns(lowerLeftQuarter)
