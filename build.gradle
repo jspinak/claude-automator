@@ -14,18 +14,17 @@ repositories {
 
 dependencies {
     // Brobot library - includes Spring, Lombok, SLF4J as transitive dependencies
-    implementation('io.github.jspinak:brobot') {
-        // Exclude transitive JavaCV dependencies to control versions
-        exclude group: 'org.bytedeco'
-    }
+    implementation 'io.github.jspinak:brobot'
     
-    // Explicit JavaCV/OpenCV dependencies matching what SikuliX expects
-    // Use the same version that matches the error message: opencv_java490
-    implementation 'org.bytedeco:javacv:1.5.10'
-    implementation 'org.bytedeco:opencv:4.9.0-1.5.10'
-    implementation 'org.bytedeco:opencv:4.9.0-1.5.10:windows-x86_64'
-    implementation 'org.bytedeco:openblas:0.3.26-1.5.10'
-    implementation 'org.bytedeco:openblas:0.3.26-1.5.10:windows-x86_64'
+    // Force JavaCV platform dependencies to ensure native libraries are included
+    implementation 'org.bytedeco:javacv-platform:1.5.10'
+    
+    // Explicitly include Windows native libraries
+    if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+        implementation 'org.bytedeco:opencv:4.9.0-1.5.10:windows-x86_64'
+        implementation 'org.bytedeco:openblas:0.3.26-1.5.10:windows-x86_64'
+        implementation 'org.bytedeco:ffmpeg:6.1.1-1.5.10:windows-x86_64'
+    }
     
     // Jakarta annotations for @PostConstruct
     implementation 'jakarta.annotation:jakarta.annotation-api:2.1.1'
@@ -67,6 +66,7 @@ springBoot {
 bootRun {
     // Set JVM arguments to disable DPI awareness and configure library path
     jvmArgs = [
+        '-Dorg.bytedeco.javacpp.logger.debug=true',  // Debug native library loading
         '-Djava.library.path=lib;lib/natives/windows-x86_64;' + System.getProperty('java.library.path'),
         '-Djna.library.path=lib',
         '-Dsikulixlibs=lib',
