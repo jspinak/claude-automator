@@ -14,12 +14,8 @@ repositories {
 
 dependencies {
     // Brobot library - includes Spring, Lombok, SLF4J as transitive dependencies
+    // Brobot already includes JavaCV platform dependencies, so we don't need them here
     implementation 'io.github.jspinak:brobot'
-    
-    // Platform-specific native libraries for runtime
-    // These don't conflict because they're only runtime dependencies
-    runtimeOnly 'org.bytedeco:opencv-platform:4.9.0-1.5.10'
-    runtimeOnly 'org.bytedeco:ffmpeg-platform:6.1.1-1.5.10'
     
     // Jakarta annotations for @PostConstruct
     implementation 'jakarta.annotation:jakarta.annotation-api:2.1.1'
