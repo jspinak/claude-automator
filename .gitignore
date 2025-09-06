@@ -64,3 +64,4 @@ src/test/java/com/claude/automator/debug/TestPatternMatchingWithZoom.java
 
 # Temporary configuration files
 src/main/java/com/claude/automator/config/ConsoleReporterConfiguration.java
+images/prompt/claude-prompt-win.png
