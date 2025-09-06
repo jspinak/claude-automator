@@ -12,6 +12,7 @@ history/
 !CLAUDE.md
 !OPENCV-WINDOWS-FIX.md
 !OPENCV-FIX-COMPLETE.md
+!TAURI-HIGHLIGHT-PROPOSAL.md
 
 # Python scripts (debug/analysis)
 *.py
