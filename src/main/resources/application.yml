@@ -49,6 +49,28 @@ brobot:
     startup-delay: 2
   sikuli:
     highlight: true
+  # Highlighting configuration
+  highlight:
+    # Method: SIKULI (default), JAVAFX, TAURI, or AUTO
+    # AUTO will try in order: Tauri > JavaFX > SikuliX
+    method: AUTO
+    fallback:
+      enabled: true
+    default-duration: 2.0
+    default-color: "#00FF00"  # Green for Claude automation
+    default-style: BORDER
+    verbose: false
+    # Tauri service settings
+    tauri:
+      timeout: 5000
+      port: 7890
+    # JavaFX settings
+    javafx:
+      animation-enabled: true
+    # SikuliX settings
+    sikuli:
+      scale-adjustment: true
+      dpi-aware: true
   monitor:
     # Use primary monitor by default (-1 = primary)
     default-screen-index: -1
