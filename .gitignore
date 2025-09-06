@@ -45,6 +45,10 @@ RunCaptureDebug.java
 !run-claude-automator.bat
 !setup-opencv.bat
 
+# PowerShell scripts
+*.ps1
+!setup-opencv-windows.ps1
+
 # Local JAR files (should use dependency management)
 libs/
 
