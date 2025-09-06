@@ -43,13 +43,7 @@ public class PromptState {
         claudePrompt = new StateImage.Builder()
             .addPatterns(
                 // Original patterns
-                "prompt/claude-prompt-1",
-                "prompt/claude-prompt-2",
-                "prompt/claude-prompt-3",
-                // 80% scaled patterns (pre-scaled to match 125% Windows scaling)
-                "prompt/claude-prompt-1-80",
-                "prompt/claude-prompt-2-80",
-                "prompt/claude-prompt-3-80"
+                "prompt/windows", "prompt/ffmpeg"
             )
             .setName("ClaudePrompt")
             .setSearchRegionForAllPatterns(lowerLeftQuarter)
