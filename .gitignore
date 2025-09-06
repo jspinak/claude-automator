@@ -39,6 +39,9 @@ RunCaptureDebug.java
 # Batch files (Windows test scripts)
 *.bat
 !gradlew.bat
+!setup-opencv-490.bat
+!run-claude-automator.bat
+!setup-opencv.bat
 
 # Local JAR files (should use dependency management)
 libs/
