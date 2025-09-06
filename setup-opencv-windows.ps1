@@ -35,12 +35,20 @@ Write-Host "Extracting OpenCV native libraries..."
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
 try {
+    # Get full path to JAR file in current directory
+    $opencvJarPath = Join-Path $pwd $opencvJar
+    
+    if (-not (Test-Path $opencvJarPath)) {
+        Write-Host "Error: OpenCV JAR not found at: $opencvJarPath" -ForegroundColor Red
+        exit 1
+    }
+    
     # Extract JAR (which is a ZIP file)
     $extractPath = Join-Path $pwd "opencv-extract"
     if (Test-Path $extractPath) {
         Remove-Item -Recurse -Force $extractPath
     }
-    [System.IO.Compression.ZipFile]::ExtractToDirectory($opencvJar, $extractPath)
+    [System.IO.Compression.ZipFile]::ExtractToDirectory($opencvJarPath, $extractPath)
     
     # Copy DLL files
     Write-Host "Copying native libraries..."
@@ -75,13 +83,21 @@ $openblasJar = "openblas-windows.jar"
 try {
     Invoke-WebRequest -Uri $openblasUrl -OutFile $openblasJar -UseBasicParsing
     
+    # Get full path to JAR file
+    $openblasJarPath = Join-Path $pwd $openblasJar
+    
+    if (-not (Test-Path $openblasJarPath)) {
+        Write-Host "Warning: OpenBLAS JAR not found at: $openblasJarPath" -ForegroundColor Yellow
+        return
+    }
+    
     # Extract OpenBLAS
     Write-Host "Extracting OpenBLAS libraries..."
     $openblasExtract = Join-Path $pwd "openblas-extract"
     if (Test-Path $openblasExtract) {
         Remove-Item -Recurse -Force $openblasExtract
     }
-    [System.IO.Compression.ZipFile]::ExtractToDirectory($openblasJar, $openblasExtract)
+    [System.IO.Compression.ZipFile]::ExtractToDirectory($openblasJarPath, $openblasExtract)
     
     # Copy OpenBLAS DLLs
     $openblasPath = Join-Path $openblasExtract "org\bytedeco\openblas\windows-x86_64"
