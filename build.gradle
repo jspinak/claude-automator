@@ -16,6 +16,10 @@ dependencies {
     // Brobot library - includes Spring, Lombok, SLF4J as transitive dependencies
     implementation 'io.github.jspinak:brobot'
     
+    // Explicit OpenCV/JavaCV dependencies for Windows compatibility
+    implementation 'org.bytedeco:opencv-platform:4.9.0-1.5.10'
+    implementation 'org.bytedeco:javacv-platform:1.5.10'
+    
     // Jakarta annotations for @PostConstruct
     implementation 'jakarta.annotation:jakarta.annotation-api:2.1.1'
     
@@ -54,8 +58,9 @@ springBoot {
 
 // Configure bootRun to disable DPI awareness for pattern matching
 bootRun {
-    // Set JVM arguments to disable DPI awareness
+    // Set JVM arguments to disable DPI awareness and configure library path
     jvmArgs = [
+        '-Djava.library.path=lib;' + System.getProperty('java.library.path'),
         '-Dbrobot.dpi.disable=true',
         '-Dsun.java2d.dpiaware=false',
         '-Dsun.java2d.uiScale=1.0'
