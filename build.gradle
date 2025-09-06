@@ -19,11 +19,17 @@ dependencies {
     // Force JavaCV platform dependencies to ensure native libraries are included
     implementation 'org.bytedeco:javacv-platform:1.5.10'
     
-    // Explicitly include Windows native libraries
+    // Platform-specific dependencies
     if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+        // Native libraries for Windows
         implementation 'org.bytedeco:opencv:4.9.0-1.5.10:windows-x86_64'
         implementation 'org.bytedeco:openblas:0.3.26-1.5.10:windows-x86_64'
         implementation 'org.bytedeco:ffmpeg:6.1.1-1.5.10:windows-x86_64'
+        
+        // JavaFX for highlighting support on Windows
+        implementation 'org.openjfx:javafx-base:21:win'
+        implementation 'org.openjfx:javafx-graphics:21:win'
+        implementation 'org.openjfx:javafx-controls:21:win'
     }
     
     // Jakarta annotations for @PostConstruct
