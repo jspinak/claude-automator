@@ -39,11 +39,11 @@ public class PromptState {
         
         // Initialize the claude prompt image with search region and ActionHistory
         // The ActionHistory is required for mock mode finds to work
-        // Now including both original and 80% scaled patterns
+        // Using scaled patterns for logical resolution (1536x864) compatibility
         claudePrompt = new StateImage.Builder()
             .addPatterns(
-                // Original patterns
-                "prompt/windows", "prompt/ffmpeg"
+                // Scaled patterns for logical resolution
+                "prompt/windows-scaled", "prompt/ffmpeg-scaled"
             )
             .setName("ClaudePrompt")
             .setSearchRegionForAllPatterns(lowerLeftQuarter)

@@ -52,6 +52,19 @@ springBoot {
     mainClass = 'com.claude.automator.ClaudeAutomatorApplication'
 }
 
+// Configure bootRun to disable DPI awareness for pattern matching
+bootRun {
+    // Set JVM arguments to disable DPI awareness
+    jvmArgs = [
+        '-Dbrobot.dpi.disable=true',
+        '-Dsun.java2d.dpiaware=false',
+        '-Dsun.java2d.uiScale=1.0'
+    ]
+    
+    // Also set environment variable
+    environment 'BROBOT_DISABLE_DPI', 'true'
+}
+
 // Task for running diagnostic tools
 task runDiagnostic(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
@@ -195,6 +208,40 @@ task testFFmpegSpring(type: JavaExec) {
     dependsOn compileJava
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'io.github.jspinak.claude.tools.TestFFmpegConfigSpring'
+    standardOutput = System.out
+    errorOutput = System.err
+}
+
+// Task to diagnose capture resolutions
+task diagnoseCaptureResolution(type: JavaExec) {
+    description = 'Diagnose screen capture resolutions with all providers'
+    group = 'diagnostics'
+    dependsOn compileJava
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'io.github.jspinak.claude.tools.CaptureResolutionDiagnostic'
+    jvmArgs = [
+        '-Dbrobot.dpi.disable=true',
+        '-Dsun.java2d.dpiaware=false',
+        '-Dsun.java2d.uiScale=1.0'
+    ]
+    environment 'BROBOT_DISABLE_DPI', 'true'
+    standardOutput = System.out
+    errorOutput = System.err
+}
+
+// Task to test pattern matching with DPI settings
+task testPatternMatching(type: JavaExec) {
+    description = 'Test pattern matching with proper DPI settings'
+    group = 'diagnostics'
+    dependsOn compileJava
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'io.github.jspinak.claude.tools.PatternMatchingTest'
+    jvmArgs = [
+        '-Dbrobot.dpi.disable=true',
+        '-Dsun.java2d.dpiaware=false',
+        '-Dsun.java2d.uiScale=1.0'
+    ]
+    environment 'BROBOT_DISABLE_DPI', 'true'
     standardOutput = System.out
     errorOutput = System.err
 }
