@@ -36,7 +36,11 @@ if not exist "opencv-windows.jar" (
 )
 
 echo Extracting OpenCV native libraries...
-powershell -Command "Expand-Archive -Path 'opencv-windows.jar' -DestinationPath 'opencv-extract' -Force"
+REM JAR files are ZIP files, but PowerShell Expand-Archive doesn't recognize .jar extension
+REM Rename to .zip temporarily
+copy opencv-windows.jar opencv-windows.zip >nul
+powershell -Command "Expand-Archive -Path 'opencv-windows.zip' -DestinationPath 'opencv-extract' -Force"
+del opencv-windows.zip
 
 REM Copy all DLLs to appropriate locations
 echo Copying native libraries...
@@ -63,7 +67,9 @@ powershell -Command "& {[Net.ServicePointManager]::SecurityProtocol = [Net.Secur
 
 if exist "openblas-windows.jar" (
     echo Extracting OpenBLAS libraries...
-    powershell -Command "Expand-Archive -Path 'openblas-windows.jar' -DestinationPath 'openblas-extract' -Force"
+    copy openblas-windows.jar openblas-windows.zip >nul
+    powershell -Command "Expand-Archive -Path 'openblas-windows.zip' -DestinationPath 'openblas-extract' -Force"
+    del openblas-windows.zip
     
     if exist "openblas-extract\org\bytedeco\openblas\windows-x86_64\*.dll" (
         copy "openblas-extract\org\bytedeco\openblas\windows-x86_64\*.dll" "lib\" /Y
