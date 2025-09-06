@@ -292,19 +292,33 @@ public class ClaudeMonitoringAutomation {
     }
 
     public void stopMonitoring() {
+        log.info("stopMonitoring() called - starting shutdown sequence");
+        
         // Move mouse to center of screen when monitoring completes
-        moveMouseToCenter();
+        try {
+            log.info("About to move mouse to center...");
+            moveMouseToCenter();
+            log.info("Mouse move to center completed");
+        } catch (Exception e) {
+            log.error("Failed to move mouse to center during shutdown", e);
+        }
 
+        log.info("Shutting down scheduler...");
         scheduler.shutdown();
 
         try {
             if (!scheduler.awaitTermination(5, TimeUnit.SECONDS)) {
+                log.warn("Scheduler did not terminate in 5 seconds, forcing shutdown");
                 scheduler.shutdownNow();
             }
+            log.info("Scheduler shutdown complete");
         } catch (InterruptedException e) {
+            log.error("Interrupted during scheduler shutdown", e);
             scheduler.shutdownNow();
             Thread.currentThread().interrupt();
         }
+        
+        log.info("stopMonitoring() completed");
     }
 
     /**
@@ -324,17 +338,29 @@ public class ClaudeMonitoringAutomation {
             Location centerLocation = new Location(Positions.Name.MIDDLEMIDDLE);
 
             log.info("Moving mouse to center of screen using Positions.Name.MIDDLEMIDDLE");
+            log.debug("Center location calculated as: {}", centerLocation);
 
             // Use the Action.perform convenience method with ActionType.MOVE
+            log.debug("Calling action.perform with MOVE and location: {}", centerLocation);
             ActionResult moveResult = action.perform(ActionType.MOVE, centerLocation);
+            log.debug("action.perform returned, checking result...");
 
-            if (moveResult.isSuccess()) {
-                log.info("Successfully moved mouse to center of screen at {}", centerLocation);
+            if (moveResult != null) {
+                log.debug("ActionResult: success={}, duration={}ms, matches={}", 
+                         moveResult.isSuccess(), moveResult.getDuration(), 
+                         moveResult.getMatchList() != null ? moveResult.getMatchList().size() : 0);
+                
+                if (moveResult.isSuccess()) {
+                    log.info("Successfully moved mouse to center of screen at {}", centerLocation);
+                } else {
+                    log.warn("Failed to move mouse to center of screen - ActionResult.isSuccess=false");
+                }
             } else {
-                log.warn("Failed to move mouse to center of screen");
+                log.error("ActionResult is null after mouse move!");
             }
         } catch (Exception e) {
             log.error("Error moving mouse to center of screen", e);
+            e.printStackTrace();
         }
     }
 
