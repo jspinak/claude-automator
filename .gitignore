@@ -10,6 +10,8 @@ history/
 *.md
 !README.md
 !CLAUDE.md
+!OPENCV-WINDOWS-FIX.md
+!OPENCV-FIX-COMPLETE.md
 
 # Python scripts (debug/analysis)
 *.py
