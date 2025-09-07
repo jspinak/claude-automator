@@ -94,17 +94,15 @@ public class ComprehensiveImageDiagnostics {
             log.info("Current absolute path: {}", currentPath);
             log.info("Current canonical path: {}", currentPath.toFile().getCanonicalPath());
             
-            // List immediate subdirectories
-            log.info("Subdirectories in working directory:");
-            Files.list(currentPath)
+            // Count subdirectories and PNG files without listing them
+            long dirCount = Files.list(currentPath)
                 .filter(Files::isDirectory)
-                .forEach(dir -> log.info("  DIR: {}", dir.getFileName()));
-                
-            // List any .png files in working directory
-            log.info("PNG files in working directory:");
-            Files.list(currentPath)
+                .count();
+            long pngCount = Files.list(currentPath)
                 .filter(path -> path.toString().endsWith(".png"))
-                .forEach(file -> log.info("  PNG: {}", file.getFileName()));
+                .count();
+            
+            log.info("Working directory contains {} subdirectories and {} PNG files", dirCount, pngCount);
                 
         } catch (IOException e) {
             log.error("Error examining working directory", e);
@@ -127,27 +125,8 @@ public class ComprehensiveImageDiagnostics {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         log.info("Context ClassLoader: {}", cl.getClass().getName());
         
-        // Try to find resources
-        try {
-            URL imagesUrl = cl.getResource("images");
-            log.info("ClassLoader resource 'images': {}", imagesUrl);
-            
-            URL workingUrl = cl.getResource("images/working");
-            log.info("ClassLoader resource 'images/working': {}", workingUrl);
-            
-            URL promptUrl = cl.getResource("images/prompt");
-            log.info("ClassLoader resource 'images/prompt': {}", promptUrl);
-            
-            // Try without images prefix
-            URL workingDirect = cl.getResource("working");
-            log.info("ClassLoader resource 'working': {}", workingDirect);
-            
-            URL promptDirect = cl.getResource("prompt");
-            log.info("ClassLoader resource 'prompt': {}", promptDirect);
-            
-        } catch (Exception e) {
-            log.error("Error checking classpath resources", e);
-        }
+        // Resources should not be checked - images are loaded from filesystem
+        log.info("Note: Images are loaded from filesystem paths, not from classpath resources");
     }
     
     private void logSikuliXConfiguration() {
@@ -209,17 +188,11 @@ public class ComprehensiveImageDiagnostics {
     private void scanFileSystem() {
         log.info("=== FILE SYSTEM SCAN ===");
         
+        // Only search in the actual image directories where StateImage declarations look
         List<String> searchPaths = Arrays.asList(
             "images",
             "images/working",
-            "images/prompt",
-            "src/main/resources/images",
-            "src/main/resources/images/working",
-            "src/main/resources/images/prompt",
-            "working",
-            "prompt",
-            "../images",
-            "claude-automator/images"
+            "images/prompt"
         );
         
         for (String searchPath : searchPaths) {
@@ -230,12 +203,10 @@ public class ComprehensiveImageDiagnostics {
                 if (dir.isDirectory()) {
                     File[] files = dir.listFiles();
                     if (files != null) {
-                        log.info("  Contains {} files/dirs", files.length);
-                        for (File file : files) {
-                            if (file.getName().endsWith(".png")) {
-                                log.info("    PNG: {} ({}KB)", file.getName(), file.length() / 1024);
-                            }
-                        }
+                        long pngCount = Arrays.stream(files)
+                            .filter(f -> f.getName().endsWith(".png"))
+                            .count();
+                        log.info("  Contains {} PNG files", pngCount);
                     }
                 }
             } else {
@@ -243,35 +214,38 @@ public class ComprehensiveImageDiagnostics {
             }
         }
         
-        // Deep scan for any PNG files
-        log.info("Deep scanning for PNG files from current directory...");
+        // Summary of PNG files without listing
+        log.info("Checking for PNG files in image directories only...");
         try {
-            Path start = Paths.get(".");
-            List<Path> pngFiles = Files.walk(start, 3) // Limit depth to 3
-                .filter(path -> path.toString().endsWith(".png"))
-                .collect(Collectors.toList());
-                
-            if (!pngFiles.isEmpty()) {
-                log.info("Found {} PNG files within 3 levels:", pngFiles.size());
-                pngFiles.forEach(png -> log.info("  {}", start.relativize(png)));
-            } else {
-                log.warn("No PNG files found within 3 directory levels!");
+            int totalPngs = 0;
+            for (String imgPath : Arrays.asList("images", "images/working", "images/prompt")) {
+                File imgDir = new File(imgPath);
+                if (imgDir.exists() && imgDir.isDirectory()) {
+                    File[] pngs = imgDir.listFiles(f -> f.getName().endsWith(".png"));
+                    if (pngs != null && pngs.length > 0) {
+                        totalPngs += pngs.length;
+                        log.info("  {} contains {} PNG files", imgPath, pngs.length);
+                    }
+                }
             }
-        } catch (IOException e) {
-            log.error("Error during deep scan", e);
+            if (totalPngs == 0) {
+                log.warn("No PNG files found in expected image directories!");
+            } else {
+                log.info("Total PNG files in image directories: {}", totalPngs);
+            }
+        } catch (Exception e) {
+            log.error("Error checking PNG files", e);
         }
     }
     
     private void testResourceLoading() {
         log.info("=== RESOURCE LOADING TEST ===");
         
+        // Only test the actual paths where images should be located
         List<String> testPaths = Arrays.asList(
-            "working/claude-icon-1.png",
             "images/working/claude-icon-1.png",
-            "/images/working/claude-icon-1.png",
-            "claude-icon-1.png",
-            "prompt/claude-prompt-1.png",
-            "images/prompt/claude-prompt-1.png"
+            "images/prompt/windows.png",
+            "images/prompt/ffmpeg.png"
         );
         
         ClassLoader cl = getClass().getClassLoader();
@@ -297,11 +271,11 @@ public class ComprehensiveImageDiagnostics {
     private void testDirectImageLoading() {
         log.info("=== DIRECT IMAGE LOAD TEST ===");
         
+        // Only test the actual paths where images should be located
         List<String> testPaths = Arrays.asList(
             "images/working/claude-icon-1.png",
-            "working/claude-icon-1.png",
-            "images/prompt/claude-prompt-1.png",
-            "prompt/claude-prompt-1.png"
+            "images/prompt/windows.png",
+            "images/prompt/ffmpeg.png"
         );
         
         for (String path : testPaths) {
