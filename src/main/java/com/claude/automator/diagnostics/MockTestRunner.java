@@ -8,7 +8,6 @@ import io.github.jspinak.brobot.action.basic.find.PatternFindOptions;
 import io.github.jspinak.brobot.model.element.Region;
 import io.github.jspinak.brobot.model.match.Match;
 import io.github.jspinak.brobot.model.state.StateImage;
-import io.github.jspinak.brobot.model.state.StateObjectData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -60,7 +59,7 @@ public class MockTestRunner implements CommandLineRunner {
         Region mockRegion = new Region(100, 200, 300, 400);
         Match mockMatch = new Match.Builder()
             .setRegion(mockRegion)
-            .setScore(0.95)
+            .setSimScore(0.95)  // Use setSimScore for the match similarity
             .setName("ClaudePrompt")
             .setStateObjectData(claudePrompt)  // This associates the match with the StateImage
             .build();
@@ -87,7 +86,8 @@ public class MockTestRunner implements CommandLineRunner {
             log.info("  ✓ SUCCESS: Match is in lastMatchesFound!");
             Match saved = savedMatches.get(0);
             log.info("  Saved match location: {}", saved.getRegion());
-            log.info("  Saved match score: {}", saved.getScore());
+            // Note: Score getter may not be available in this version
+            // log.info("  Saved match similarity: {}", saved.getSimilarity());
         } else {
             log.error("  ✗ FAILURE: lastMatchesFound is empty!");
         }
@@ -115,10 +115,10 @@ public class MockTestRunner implements CommandLineRunner {
                     // Apply adjustments (simulate what DynamicRegionResolver does)
                     var adjustments = claudeIcon.getSearchRegionOnObject().getAdjustments();
                     if (adjustments != null) {
-                        int x = targetRegion.x + adjustments.getAddX();
-                        int y = targetRegion.y + adjustments.getAddY();
-                        int w = targetRegion.w + adjustments.getAddW();
-                        int h = targetRegion.h + adjustments.getAddH();
+                        int x = targetRegion.getX() + adjustments.getAddX();
+                        int y = targetRegion.getY() + adjustments.getAddY();
+                        int w = targetRegion.getW() + adjustments.getAddW();
+                        int h = targetRegion.getH() + adjustments.getAddH();
                         
                         Region adjustedRegion = new Region(x, y, w, h);
                         log.info("  ✓ Can compute search region for ClaudeIcon:");

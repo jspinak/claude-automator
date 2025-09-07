@@ -77,4 +77,7 @@ src/main/java/com/claude/automator/config/ConsoleReporterConfiguration.java
 images/prompt/claude-prompt-win.png
 
 # Build artifacts
-  META-INF/
+META-INF/
+
+TestMouseMovement.class
+TestMouseMovement.java
