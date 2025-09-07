@@ -319,6 +319,12 @@ public class ClaudeMonitoringAutomation {
         }
         
         log.info("stopMonitoring() completed");
+        
+        // Exit the application cleanly after a short delay to allow cleanup
+        scheduler.schedule(() -> {
+            log.info("Exiting application...");
+            System.exit(0);
+        }, 1, TimeUnit.SECONDS);
     }
 
     /**
