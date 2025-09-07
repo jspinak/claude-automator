@@ -107,13 +107,15 @@ public class ClaudeMonitoringAutomation {
         log.info("WorkingState ClaudeIcon search region config: {}",
                 workingState.getClaudeIcon().getSearchRegionOnObject());
         
-        // Run comprehensive pattern diagnostics at startup (skip if headless)
-        if (patternDiagnostics != null && !GraphicsEnvironment.isHeadless()) {
+        // Skip pattern diagnostics - they interfere with declarative regions
+        // The diagnostics search for patterns individually, which breaks the
+        // dependency chain where ClaudeIcon should search near ClaudePrompt
+        if (false && patternDiagnostics != null && !GraphicsEnvironment.isHeadless()) {
             log.info("Running pattern matching diagnostics...");
             patternDiagnostics.diagnoseStateImage(promptState.getClaudePrompt(), "PROMPT_STATE_STARTUP");
             patternDiagnostics.diagnoseStateImage(workingState.getClaudeIcon(), "WORKING_STATE_STARTUP");
-        } else if (GraphicsEnvironment.isHeadless()) {
-            log.warn("Skipping pattern diagnostics in headless mode");
+        } else {
+            log.info("Skipping pattern diagnostics to preserve declarative region dependencies");
         }
 
         log.info("Starting monitoring with max iterations: {}", maxIterations);
@@ -186,6 +188,15 @@ public class ClaudeMonitoringAutomation {
         log.info("Prompt state active, attempting to navigate to Working state");
         log.info("About to search for ClaudePrompt (instance: {})", 
                 System.identityHashCode(promptState.getClaudePrompt()));
+        log.info("ClaudePrompt has {} patterns", promptState.getClaudePrompt().getPatterns().size());
+        
+        // Log the search regions for ClaudePrompt patterns
+        for (int i = 0; i < promptState.getClaudePrompt().getPatterns().size(); i++) {
+            var pattern = promptState.getClaudePrompt().getPatterns().get(i);
+            log.info("  Pattern {}: search regions = {}", i, 
+                    pattern.getSearchRegions() != null ? 
+                    pattern.getSearchRegions().getAllRegions() : "null");
+        }
 
         // Use action.find for verification before navigation
         // State activation happens automatically in the Action framework
@@ -195,6 +206,12 @@ public class ClaudeMonitoringAutomation {
             log.info("✅ ClaudePrompt FOUND at {} - {} matches total",
                     promptFound.getMatchList().get(0).getRegion(),
                     promptFound.getMatchList().size());
+            
+            // CRITICAL: ClaudePrompt has been found
+            // Its lastMatchesFound should now be populated
+            log.info("ClaudePrompt lastMatchesFound size: {}", 
+                    promptState.getClaudePrompt().getLastMatchesFound().size());
+            
             log.info("Now navigating to Working state...");
             boolean success = stateNavigator.openState("Working");
             log.info("Navigation to Working state: {}", success ? "SUCCESS" : "FAILED");
@@ -217,6 +234,23 @@ public class ClaudeMonitoringAutomation {
                 System.identityHashCode(workingState.getClaudeIcon()));
         log.info("ClaudeIcon SearchRegionOnObject config: {}",
                 workingState.getClaudeIcon().getSearchRegionOnObject());
+        
+        // Check if ClaudePrompt was previously found
+        log.info("ClaudePrompt lastMatchesFound size: {}",
+                promptState.getClaudePrompt().getLastMatchesFound().size());
+        if (!promptState.getClaudePrompt().getLastMatchesFound().isEmpty()) {
+            log.info("ClaudePrompt was found at: {}",
+                    promptState.getClaudePrompt().getLastMatchesFound().get(0).getRegion());
+        }
+        
+        // Log the search regions for ClaudeIcon patterns BEFORE searching
+        log.info("ClaudeIcon has {} patterns", workingState.getClaudeIcon().getPatterns().size());
+        for (int i = 0; i < workingState.getClaudeIcon().getPatterns().size(); i++) {
+            var pattern = workingState.getClaudeIcon().getPatterns().get(i);
+            log.info("  Pattern {} ({}): search regions = {}", i, pattern.getName(),
+                    pattern.getSearchRegions() != null ? 
+                    pattern.getSearchRegions().getAllRegions() : "null");
+        }
         
         // Build find options with configuration from properties
         PatternFindOptions findOptions = new PatternFindOptions.Builder()
