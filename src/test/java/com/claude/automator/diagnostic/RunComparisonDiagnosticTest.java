@@ -1,12 +1,11 @@
 package com.claude.automator.diagnostic;
 
+import com.claude.automator.TestBase;
 import com.claude.automator.states.PromptState;
 import com.claude.automator.states.WorkingState;
 import io.github.jspinak.brobot.tools.diagnostics.SikuliXBrobotComparisonDiagnostic;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.TestPropertySource;
 
 /**
  * Test class to run the SikuliXBrobotComparisonDiagnostic directly.
@@ -17,13 +16,7 @@ import org.springframework.test.context.TestPropertySource;
  * 
  * Or run a specific test method by clicking the green arrow next to it.
  */
-@SpringBootTest(classes = com.claude.automator.ClaudeAutomatorApplication.class)
-@TestPropertySource(properties = {
-    "brobot.logging.verbosity=VERBOSE",
-    "logging.level.io.github.jspinak.brobot=DEBUG",
-    "logging.level.com.claude.automator=DEBUG"
-})
-public class RunComparisonDiagnosticTest {
+public class RunComparisonDiagnosticTest extends TestBase {
 
     @Autowired
     private SikuliXBrobotComparisonDiagnostic comparisonDiagnostic;

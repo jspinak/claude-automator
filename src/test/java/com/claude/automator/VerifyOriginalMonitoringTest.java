@@ -5,7 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
 
@@ -16,14 +16,12 @@ import org.springframework.context.annotation.Profile;
  * 
  * Run with: java -jar build/libs/claude-automator-*.jar --spring.profiles.active=verify-original
  */
-@SpringBootApplication(scanBasePackages = {"com.claude.automator", "io.github.jspinak.brobot"})
+@SpringBootTest
 public class VerifyOriginalMonitoringTest {
     
     private static final Logger log = LoggerFactory.getLogger(VerifyOriginalMonitoringTest.class);
     
-    public static void main(String[] args) {
-        SpringApplication.run(VerifyOriginalMonitoringTest.class, args);
-    }
+    // Remove main method - this is a test class, not an application class
     
     @Bean
     @Profile("verify-original")
