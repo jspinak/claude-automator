@@ -3,14 +3,12 @@ package com.claude.automator;
 import io.github.jspinak.brobot.tools.diagnostics.QuickMatchComparison;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
-import org.springframework.boot.test.context.SpringBootTest;
 import java.awt.GraphicsEnvironment;
 
 /**
  * Run the quick diagnostic as a test to leverage Spring's dependency management
  */
-@SpringBootTest
-public class RunDiagnosticTest {
+public class RunDiagnosticTest extends TestBase {
 
     @Test
     @DisabledIfEnvironmentVariable(named = "CI", matches = "true")

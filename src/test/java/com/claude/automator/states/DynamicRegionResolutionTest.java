@@ -1,5 +1,6 @@
 package com.claude.automator.states;
 
+import com.claude.automator.TestBase;
 import io.github.jspinak.brobot.action.Action;
 import io.github.jspinak.brobot.action.ActionResult;
 import io.github.jspinak.brobot.action.ActionType;
@@ -11,7 +12,6 @@ import io.github.jspinak.brobot.model.element.SearchRegionOnObject;
 import io.github.jspinak.brobot.model.state.StateImage;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -22,8 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * that references PromptState.ClaudePrompt, the search regions are properly
  * resolved after finding ClaudePrompt.
  */
-@SpringBootTest(classes = com.claude.automator.ClaudeAutomatorApplication.class)
-public class DynamicRegionResolutionTest {
+public class DynamicRegionResolutionTest extends TestBase {
     
     @Autowired
     private Action action;

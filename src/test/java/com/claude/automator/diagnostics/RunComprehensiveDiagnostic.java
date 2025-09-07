@@ -1,10 +1,10 @@
 package com.claude.automator.diagnostics;
 
+import com.claude.automator.TestBase;
 import io.github.jspinak.brobot.tools.diagnostics.ComprehensiveMatchingDiagnostic;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.sikuli.basics.Settings;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 
 import java.awt.*;
@@ -18,13 +18,12 @@ import java.nio.file.Paths;
  * 
  * Run this test in IntelliJ on Windows to diagnose the matching discrepancy.
  */
-@SpringBootTest(classes = com.claude.automator.ClaudeAutomatorApplication.class)
 @TestPropertySource(properties = {
     "brobot.core.mock=false",
     "brobot.dpi.resize-factor=0.8",  // Test with your DPI setting
     "brobot.logging.verbosity=VERBOSE"
 })
-public class RunComprehensiveDiagnostic {
+public class RunComprehensiveDiagnostic extends TestBase {
 
     @Test
     @DisabledIfEnvironmentVariable(named = "CI", matches = "true")
