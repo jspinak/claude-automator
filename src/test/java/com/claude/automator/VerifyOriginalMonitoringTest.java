@@ -1,7 +1,8 @@
 package com.claude.automator;
 
 import com.claude.automator.automation.ClaudeMonitoringAutomation;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -16,8 +17,9 @@ import org.springframework.context.annotation.Profile;
  * Run with: java -jar build/libs/claude-automator-*.jar --spring.profiles.active=verify-original
  */
 @SpringBootApplication(scanBasePackages = {"com.claude.automator", "io.github.jspinak.brobot"})
-@Slf4j
 public class VerifyOriginalMonitoringTest {
+    
+    private static final Logger log = LoggerFactory.getLogger(VerifyOriginalMonitoringTest.class);
     
     public static void main(String[] args) {
         SpringApplication.run(VerifyOriginalMonitoringTest.class, args);
