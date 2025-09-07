@@ -19,6 +19,7 @@ import io.github.jspinak.brobot.util.image.debug.CaptureDebugger;
 import io.github.jspinak.brobot.model.element.Location;
 import io.github.jspinak.brobot.model.element.Positions;
 import io.github.jspinak.brobot.model.element.Region;
+import io.github.jspinak.brobot.lifecycle.ApplicationLifecycleService;
 import java.awt.GraphicsEnvironment;
 
 import jakarta.annotation.PostConstruct;
@@ -62,6 +63,9 @@ public class ClaudeMonitoringAutomation {
     private final Action action;
     private final WorkingState workingState;
     private final PromptState promptState;
+    
+    @Autowired
+    private ApplicationLifecycleService lifecycleService;
 
     // Optional debugger - not required for normal operation
     @Autowired(required = false)
@@ -98,7 +102,6 @@ public class ClaudeMonitoringAutomation {
     @Value("${claude.automator.monitoring.debug-capture:false}")
     private boolean debugCaptureEnabled;
 
-    @PostConstruct
     public void startMonitoring() {
         // Log the search region configuration for debugging
         log.info("WorkingState ClaudeIcon search region config: {}",
@@ -179,19 +182,24 @@ public class ClaudeMonitoringAutomation {
      * Navigates from Prompt to Working state using modern pattern.
      */
     private void navigateToWorkingState() {
-        log.debug("Prompt state active, attempting to navigate to Working state");
+        log.info("=== NAVIGATE TO WORKING STATE ===");
+        log.info("Prompt state active, attempting to navigate to Working state");
+        log.info("About to search for ClaudePrompt (instance: {})", 
+                System.identityHashCode(promptState.getClaudePrompt()));
 
         // Use action.find for verification before navigation
         // State activation happens automatically in the Action framework
         ActionResult promptFound = action.find(promptState.getClaudePrompt());
 
         if (promptFound.isSuccess()) {
-            log.debug("Prompt confirmed at {}, navigating to Working",
-                    promptFound.getMatchList().get(0).getRegion());
+            log.info("✅ ClaudePrompt FOUND at {} - {} matches total",
+                    promptFound.getMatchList().get(0).getRegion(),
+                    promptFound.getMatchList().size());
+            log.info("Now navigating to Working state...");
             boolean success = stateNavigator.openState("Working");
-            log.debug("Navigation to Working state: {}", success ? "SUCCESS" : "FAILED");
+            log.info("Navigation to Working state: {}", success ? "SUCCESS" : "FAILED");
         } else {
-            log.debug("Prompt not found, skipping navigation");
+            log.info("❌ ClaudePrompt NOT FOUND, skipping navigation");
         }
     }
 
@@ -204,6 +212,12 @@ public class ClaudeMonitoringAutomation {
      * </p>
      */
     private void checkWorkingIconWithConditionalChain() {
+        log.info("=== CHECK WORKING ICON ===");
+        log.info("About to search for ClaudeIcon (instance: {})", 
+                System.identityHashCode(workingState.getClaudeIcon()));
+        log.info("ClaudeIcon SearchRegionOnObject config: {}",
+                workingState.getClaudeIcon().getSearchRegionOnObject());
+        
         // Build find options with configuration from properties
         PatternFindOptions findOptions = new PatternFindOptions.Builder()
                 .setSearchDuration(iconTimeout)
@@ -214,12 +228,12 @@ public class ClaudeMonitoringAutomation {
         ConditionalActionChain
                 .find(findOptions)
                 .ifFoundDo(result -> {
-                    log.debug("Claude icon found with {} matches at {}",
+                    log.info("✅ ClaudeIcon FOUND with {} matches at {}",
                             result.getMatchList().size(),
                             result.getMatchList().get(0).getRegion());
                 })
                 .ifNotFoundDo(result -> {
-                    log.debug("Claude icon not found, transitioning back to Prompt state");
+                    log.info("❌ ClaudeIcon NOT FOUND, transitioning back to Prompt state");
                     handleIconDisappearance();
                 })
                 .perform(action, new ObjectCollection.Builder()
@@ -320,11 +334,9 @@ public class ClaudeMonitoringAutomation {
         
         log.info("stopMonitoring() completed");
         
-        // Exit the application cleanly after a short delay to allow cleanup
-        scheduler.schedule(() -> {
-            log.info("Exiting application...");
-            System.exit(0);
-        }, 1, TimeUnit.SECONDS);
+        // Use the Brobot library's lifecycle service for proper shutdown
+        log.info("Requesting application shutdown via lifecycle service");
+        lifecycleService.requestShutdown();
     }
 
     /**

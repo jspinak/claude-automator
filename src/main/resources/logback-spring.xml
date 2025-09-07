@@ -28,7 +28,9 @@
     <!-- Reduce noise from specific components -->
     <logger name="io.github.jspinak.brobot.lifecycle" level="WARN"/>
     <logger name="io.github.jspinak.brobot.statemanagement" level="WARN"/>
-    <logger name="io.github.jspinak.brobot.action.basic.find" level="ERROR"/>
+    <!-- Enable Find logging for debugging lastMatchesFound -->
+    <logger name="io.github.jspinak.brobot.action.basic.find" level="INFO"/>
+    <logger name="io.github.jspinak.brobot.action.internal.region" level="INFO"/>
     <logger name="io.github.jspinak.brobot.logging.unified" level="ERROR"/>
     <logger name="io.github.jspinak.brobot.config" level="WARN"/>
     <logger name="io.github.jspinak.brobot.tools.logging" level="ERROR"/>
