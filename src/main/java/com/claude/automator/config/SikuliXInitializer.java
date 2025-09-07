@@ -51,24 +51,31 @@ public class SikuliXInitializer {
             if (imagesDir.exists() && imagesDir.isDirectory()) {
                 String imagePath = imagesDir.getAbsolutePath();
                 
-                // Add the images directory to the ImagePath
-                ImagePath.add(imagePath);
-                System.out.println("[SikuliX] Added image path: " + imagePath);
-                
-                // Also set it as the bundle path
+                // Set the bundle path first
                 ImagePath.setBundlePath(imagePath);
                 System.out.println("[SikuliX] Set bundle path: " + ImagePath.getBundlePath());
                 
-                // Verify subdirectories are accessible
+                // Add the main images directory
+                ImagePath.add(imagePath);
+                System.out.println("[SikuliX] Added image path: " + imagePath);
+                
+                // Add subdirectories to ImagePath
                 File workingDir = new File(imagesDir, "working");
                 File promptDir = new File(imagesDir, "prompt");
                 
                 if (workingDir.exists()) {
-                    System.out.println("[SikuliX] Found working directory: " + workingDir.getAbsolutePath());
+                    ImagePath.add(workingDir.getAbsolutePath());
+                    System.out.println("[SikuliX] Added working directory to ImagePath: " + workingDir.getAbsolutePath());
                 }
                 if (promptDir.exists()) {
-                    System.out.println("[SikuliX] Found prompt directory: " + promptDir.getAbsolutePath());
+                    ImagePath.add(promptDir.getAbsolutePath());
+                    System.out.println("[SikuliX] Added prompt directory to ImagePath: " + promptDir.getAbsolutePath());
                 }
+                
+                // Also add the current working directory for backward compatibility
+                ImagePath.add(System.getProperty("user.dir"));
+                System.out.println("[SikuliX] Added current directory to ImagePath: " + System.getProperty("user.dir"));
+                
             } else {
                 System.err.println("[SikuliX] Images directory not found at: " + imagesDir.getAbsolutePath());
             }
