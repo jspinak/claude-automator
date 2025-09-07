@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Profile;
  * 
  * Run with: java -jar build/libs/claude-automator-*.jar --spring.profiles.active=verify-original
  */
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.claude.automator", "io.github.jspinak.brobot"})
 @Slf4j
 public class VerifyOriginalMonitoringTest {
     
@@ -46,8 +46,10 @@ public class VerifyOriginalMonitoringTest {
                 Thread.sleep(3000);
                 
                 log.info("Starting monitoring test...");
-                // The monitoring will start automatically via @PostConstruct
-                // Just wait for it to run a few iterations
+                log.info("Explicitly starting monitoring (since we removed @PostConstruct)...");
+                monitoring.startMonitoring();
+                
+                // Wait for monitoring to run a few iterations
                 Thread.sleep(10000);
                 
                 log.info("Test complete. Check the logs above to verify:");
