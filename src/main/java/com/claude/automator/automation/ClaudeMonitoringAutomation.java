@@ -213,8 +213,14 @@ public class ClaudeMonitoringAutomation {
                     promptState.getClaudePrompt().getLastMatchesFound().size());
             
             log.info("Now navigating to Working state...");
+            log.info("Current active states before navigation: {}", stateMemory.getActiveStates());
+            
+            // Debug: Check if transition is available
+            log.info("Attempting to navigate from current state to Working state");
             boolean success = stateNavigator.openState("Working");
+            
             log.info("Navigation to Working state: {}", success ? "SUCCESS" : "FAILED");
+            log.info("Active states after navigation: {}", stateMemory.getActiveStates());
         } else {
             log.info("❌ ClaudePrompt NOT FOUND, skipping navigation");
         }
