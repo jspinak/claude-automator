@@ -59,22 +59,23 @@ public class PromptToWorkingTransition {
             }
             
             // Execute actions separately for better control and debugging
-            log.info("Step 2: Clicking on ClaudePrompt...");
+            log.info("Step 2: Clicking on the found location...");
             
-            // Click on the prompt
+            // Click on the location where we found the prompt
             ClickOptions clickOptions = new ClickOptions.Builder()
                     .setPauseAfterEnd(0.5) // Pause after clicking
                     .build();
             
+            // Use the region from the find result for clicking
             ObjectCollection clickTarget = new ObjectCollection.Builder()
-                    .withImages(promptState.getClaudePrompt())
+                    .withRegions(findResult.getMatchList().get(0).getRegion())
                     .build();
             
             ActionResult clickResult = action.perform(clickOptions, clickTarget);
             log.info("Click result: success={}", clickResult.isSuccess());
             
             if (!clickResult.isSuccess()) {
-                log.error("Failed to click on ClaudePrompt");
+                log.error("Failed to click on found region");
                 log.info("=== TRANSITION DEBUG: PromptToWorkingTransition.execute() END - FAILED (Click) ===");
                 return false;
             }
