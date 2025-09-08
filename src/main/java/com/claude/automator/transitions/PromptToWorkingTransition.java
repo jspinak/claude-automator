@@ -58,53 +58,52 @@ public class PromptToWorkingTransition {
                 return false;
             }
             
-            // Now try the full chained action
-            log.info("Step 2: Executing chained action (find -> click -> type)...");
+            // Execute actions separately for better control and debugging
+            log.info("Step 2: Clicking on ClaudePrompt...");
             
-            // Using the fluent API to chain actions: find -> click -> type
-            PatternFindOptions findClickType = new PatternFindOptions.Builder()
-                    .setPauseAfterEnd(0.5) // Pause before clicking
-                    .then(new ClickOptions.Builder()
-                            .setPauseAfterEnd(0.5) // Pause before typing
-                            .build())
-                    .then(new TypeOptions.Builder()
-                            .build())
+            // Click on the prompt
+            ClickOptions clickOptions = new ClickOptions.Builder()
+                    .setPauseAfterEnd(0.5) // Pause after clicking
                     .build();
             
-            // Create target objects for the chained action
-            ObjectCollection target = new ObjectCollection.Builder()
-                    .withImages(promptState.getClaudePrompt()) // For find & click
-                    .withStrings(promptState.getContinueCommand()) // For type (continue with Enter)
+            ObjectCollection clickTarget = new ObjectCollection.Builder()
+                    .withImages(promptState.getClaudePrompt())
                     .build();
             
-            log.info("Executing chained action with targets:");
-            log.info("  - Images: {}", target.getStateImages());
-            log.info("  - Strings: {}", target.getStateStrings());
+            ActionResult clickResult = action.perform(clickOptions, clickTarget);
+            log.info("Click result: success={}", clickResult.isSuccess());
             
-            // Execute the chained action
-            ActionResult result = action.perform(findClickType, target);
-            
-            log.info("Chained action result:");
-            log.info("  - Success: {}", result.isSuccess());
-            log.info("  - Matches: {}", result.getMatchList().size());
-            log.info("  - Text typed: '{}'", result.getText());
-            log.info("  - Duration: {}ms", result.getDuration());
-            
-            if (!result.isSuccess()) {
-                log.error("Chained action failed. Checking individual action results...");
-                // Log more details about what failed
-                if (result.getMatchList().isEmpty()) {
-                    log.error("  - No matches found for ClaudePrompt");
-                }
-                if (result.getText() == null || result.getText().isEmpty()) {
-                    log.error("  - Text was not typed");
-                }
+            if (!clickResult.isSuccess()) {
+                log.error("Failed to click on ClaudePrompt");
+                log.info("=== TRANSITION DEBUG: PromptToWorkingTransition.execute() END - FAILED (Click) ===");
+                return false;
             }
             
-            log.info("=== TRANSITION DEBUG: PromptToWorkingTransition.execute() END - {} ===", 
-                    result.isSuccess() ? "SUCCESS" : "FAILED");
+            // Type the continue command
+            log.info("Step 3: Typing continue command...");
+            log.info("Command to type: '{}'", promptState.getContinueCommand().getString());
             
-            return result.isSuccess();
+            TypeOptions typeOptions = new TypeOptions.Builder()
+                    .setPauseBeforeBegin(0.5) // Pause before typing
+                    .build();
+            
+            ObjectCollection typeTarget = new ObjectCollection.Builder()
+                    .withStrings(promptState.getContinueCommand())
+                    .build();
+            
+            ActionResult typeResult = action.perform(typeOptions, typeTarget);
+            log.info("Type result: success={}, text typed='{}'", 
+                    typeResult.isSuccess(), typeResult.getText());
+            
+            if (!typeResult.isSuccess()) {
+                log.error("Failed to type continue command");
+                log.info("=== TRANSITION DEBUG: PromptToWorkingTransition.execute() END - FAILED (Type) ===");
+                return false;
+            }
+            
+            log.info("=== TRANSITION DEBUG: PromptToWorkingTransition.execute() END - SUCCESS ===");
+            
+            return true;
             
         } catch (Exception e) {
             log.error("Exception during transition execution", e);
