@@ -28,7 +28,8 @@ public class PromptToWorkingTransition {
      * Uses fluent API to chain: find -> click -> type.
      */
     public boolean execute() {
-        log.info("=== TRANSITION DEBUG: PromptToWorkingTransition.execute() START ===");
+        log.info("=== TRANSITION EXECUTION: PromptToWorkingTransition.execute() START ===");
+        System.out.println("=== TRANSITION EXECUTION: PromptToWorkingTransition.execute() CALLED ===");
         
         try {
             // Log the prompt state details
