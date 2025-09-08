@@ -367,16 +367,13 @@ public class ClaudeMonitoringAutomation {
             }
             log.info("Scheduler shutdown complete");
         } catch (InterruptedException e) {
-            log.error("Interrupted during scheduler shutdown", e);
+            // This is expected during shutdown, handle gracefully
+            log.info("Scheduler shutdown interrupted - proceeding with shutdown");
             scheduler.shutdownNow();
             Thread.currentThread().interrupt();
         }
         
         log.info("stopMonitoring() completed");
-        
-        // Use the Brobot library's lifecycle service for proper shutdown
-        log.info("Requesting application shutdown via lifecycle service");
-        lifecycleService.requestShutdown();
     }
 
     /**
