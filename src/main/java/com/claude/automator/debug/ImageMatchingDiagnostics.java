@@ -1,10 +1,9 @@
 package com.claude.automator.debug;
 
-import com.claude.automator.util.ImageNormalizer;
+import io.github.jspinak.brobot.util.image.ImageNormalizer;
 import io.github.jspinak.brobot.model.element.Pattern;
 import io.github.jspinak.brobot.model.element.Scene;
 import io.github.jspinak.brobot.util.image.core.BufferedImageUtilities;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.sikuli.script.Finder;
 import org.sikuli.script.Match;
@@ -29,11 +28,9 @@ import java.util.List;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class ImageMatchingDiagnostics {
     
-    private final ImageNormalizer imageNormalizer;
-    private final BufferedImageUtilities bufferedImageUtilities;
+    private final BufferedImageUtilities bufferedImageUtilities = new BufferedImageUtilities();
     
     private static final DateTimeFormatter TIMESTAMP_FORMAT = 
         DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
@@ -67,7 +64,7 @@ public class ImageMatchingDiagnostics {
         diagnoseBitDepth(patternImage, sceneImage, report);
         
         // Check format compatibility
-        boolean compatible = imageNormalizer.areFormatsCompatible(patternImage, sceneImage);
+        boolean compatible = ImageNormalizer.areFormatsCompatible(patternImage, sceneImage);
         report.setFormatsCompatible(compatible);
         if (!compatible) {
             report.addIssue("Image formats are incompatible for matching");
@@ -78,8 +75,8 @@ public class ImageMatchingDiagnostics {
         report.setOriginalMatchScore(originalScore);
         
         // Try matching with normalized images
-        BufferedImage normalizedPattern = imageNormalizer.normalizeToRGB(patternImage);
-        BufferedImage normalizedScene = imageNormalizer.normalizeToRGB(sceneImage);
+        BufferedImage normalizedPattern = ImageNormalizer.normalizeToRGB(patternImage);
+        BufferedImage normalizedScene = ImageNormalizer.normalizeToRGB(sceneImage);
         double normalizedScore = tryMatch(normalizedPattern, normalizedScene);
         report.setNormalizedMatchScore(normalizedScore);
         
@@ -202,7 +199,7 @@ public class ImageMatchingDiagnostics {
                 log.info("Saved original pattern to: {}", patternFile.getPath());
                 
                 // Save normalized version
-                BufferedImage normalized = imageNormalizer.normalizeToRGB(patternImg);
+                BufferedImage normalized = ImageNormalizer.normalizeToRGB(patternImg);
                 File normalizedFile = dir.resolve(timestamp + "_" + safeName + "_pattern_normalized.png").toFile();
                 ImageIO.write(normalized, "png", normalizedFile);
                 log.info("Saved normalized pattern to: {}", normalizedFile.getPath());
