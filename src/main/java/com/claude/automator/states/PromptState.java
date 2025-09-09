@@ -1,11 +1,17 @@
 package com.claude.automator.states;
 
 import io.github.jspinak.brobot.annotations.State;
+import io.github.jspinak.brobot.action.basic.find.PatternFindOptions;
+import io.github.jspinak.brobot.model.action.ActionRecord;
 import io.github.jspinak.brobot.model.element.Region;
+import io.github.jspinak.brobot.model.match.Match;
 import io.github.jspinak.brobot.model.state.StateImage;
 import io.github.jspinak.brobot.model.state.StateString;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.time.LocalDateTime;
+import java.util.Collections;
 
 /**
  * Represents the Prompt state where Claude is waiting for input.
@@ -61,11 +67,78 @@ public class PromptState {
             System.out.println("  - getRegionsForSearch(): " + p.getRegionsForSearch());
             System.out.println("  - Has ActionHistory: " + (p.getMatchHistory() != null && !p.getMatchHistory().getSnapshots().isEmpty()));
         }
+        
+        // Add mock ActionSnapshots for Find operations
+        // This helps the mock framework provide realistic responses
+        addMockFindSnapshots();
         // Create the continue command as a string
         continueCommand = new StateString.Builder()
             .setName("ContinueCommand")
             .setString("continue\n")
             .build();
+    }
+    
+    /**
+     * Adds mock ActionSnapshots for Find operations to enable realistic mock behavior.
+     * These snapshots simulate successful Find operations with the ClaudePrompt pattern
+     * at typical locations in the lower left quarter of the screen.
+     */
+    private void addMockFindSnapshots() {
+        // Create successful find snapshot 1
+        ActionRecord snapshot1 = new ActionRecord.Builder()
+            .setActionConfig(new PatternFindOptions.Builder()
+                .setStrategy(PatternFindOptions.Strategy.FIRST)
+                .setSimilarity(0.85)
+                .build())
+            .setMatchList(Collections.singletonList(
+                new Match.Builder()
+                    .setRegion(100, 600, 150, 30)
+                    .setSimScore(0.92)
+                    .setName("ClaudePrompt")
+                    .build()
+            ))
+            .setActionSuccess(true)
+            .setResultSuccess(true)
+            .setDuration(0.25)
+            .setTimeStamp(LocalDateTime.now().minusMinutes(10))
+            .build();
+        
+        // Create successful find snapshot 2
+        ActionRecord snapshot2 = new ActionRecord.Builder()
+            .setActionConfig(new PatternFindOptions.Builder()
+                .setStrategy(PatternFindOptions.Strategy.FIRST)
+                .setSimilarity(0.85)
+                .build())
+            .setMatchList(Collections.singletonList(
+                new Match.Builder()
+                    .setRegion(95, 595, 155, 35)
+                    .setSimScore(0.89)
+                    .setName("ClaudePrompt")
+                    .build()
+            ))
+            .setActionSuccess(true)
+            .setResultSuccess(true)
+            .setDuration(0.18)
+            .setTimeStamp(LocalDateTime.now().minusMinutes(5))
+            .build();
+        
+        // Create failed find snapshot
+        ActionRecord snapshot3 = new ActionRecord.Builder()
+            .setActionConfig(new PatternFindOptions.Builder()
+                .setStrategy(PatternFindOptions.Strategy.FIRST)
+                .setSimilarity(0.85)
+                .build())
+            .setMatchList(Collections.emptyList())
+            .setActionSuccess(false)
+            .setResultSuccess(false)
+            .setDuration(2.0)
+            .setTimeStamp(LocalDateTime.now().minusMinutes(2))
+            .build();
+        
+        // Add all snapshots to all patterns using the new StateImage method
+        claudePrompt.addActionSnapshotsToAllPatterns(snapshot1, snapshot2, snapshot3);
+        
+        log.info("[PromptState] Added mock ActionSnapshots for Find operations");
     }
     
 }
