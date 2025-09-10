@@ -81,3 +81,20 @@ META-INF/
 
 TestMouseMovement.class
 TestMouseMovement.java
+images/working/*.png
+images/prompt/*.png
+
+# Compiled class files
+*.class
+
+# Test artifacts
+test-artifacts/
+
+# Windows scripts (optional - uncomment if not needed)
+# *.bat
+# *.ps1
+
+# Project documentation (keep locally but don't track)
+OPENCV-FIX-COMPLETE.md
+OPENCV-WINDOWS-FIX.md
+TAURI-HIGHLIGHT-PROPOSAL.md
